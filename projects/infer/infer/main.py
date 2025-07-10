@@ -10,10 +10,7 @@ from infer.postprocess import Postprocessor
 
 
 def infer(
-    client: InferenceClient,
-    sequence: Sequence,
-    postprocessor: Postprocessor,
-    return_timeseries: bool = False,
+    client: InferenceClient, sequence: Sequence, postprocessor: Postprocessor
 ):
     """
     Perform inference on a sequence of data.
@@ -25,8 +22,6 @@ def infer(
             Sequence object
         postprocessor:
             Postprocessor object
-        return_timeseries:
-            If true, return full inference output timeseries
 
     Returns:
         background: Background events
@@ -85,14 +80,12 @@ def infer(
         time.sleep(1e-1)
     logging.info("Inference complete, postprocessing output timeseries")
 
-    background_ts, foreground_ts = result
-    background = postprocessor(background_ts)
-    foreground = postprocessor(foreground_ts)
+    background, foreground = result
+    background = postprocessor(background)
+    foreground = postprocessor(foreground)
 
     logging.info("Recovering injections from foreground events")
     foreground = sequence.recover(foreground)
 
     logging.info(f"Finished processing sequence {sequence.id}")
-    if return_timeseries:
-        return background, foreground, background_ts, foreground_ts
     return background, foreground

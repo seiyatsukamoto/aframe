@@ -67,4 +67,6 @@ class AframeDataTask(AframeSingularityTask):
             value = os.getenv(envvar)
             if value is not None:
                 env[envvar] = value
+
+        env["TMPDIR"] = os.getenv("AFRAME_TMPDIR", "/tmp")
         return env

@@ -1,12 +1,8 @@
-import json
 import os
-import warnings
 from pathlib import Path
 
-import h5py
 import law
 import luigi
-import numpy as np
 from luigi.util import inherits
 
 import utils.data as data_utils
@@ -35,7 +31,6 @@ class InferParameters(law.Task):
         default=100.0, description="Inferences per second per gpu"
     )
     zero_lag = luigi.BoolParameter(default="true")
-    return_timeseries = luigi.BoolParameter(default="false")
     output_dir = PathParameter(default=paths().results_dir)
     train_task = luigi.TaskParameter()
 
@@ -59,22 +54,6 @@ class InferBase(
         # multiply by two since there seems to be
         # some latency in laws job submission
         self.parallel_jobs = int(self.num_clients * 2)
-
-        # Threshold roughly based on the amount of data produced by one
-        # year of timeslides at 4 Hz
-        if (
-            self.return_timeseries
-            and self.Tb * self.inference_sampling_rate > 3e8
-        ):
-            warnings.warn(
-                "return_timeseries is set to 'True', and based on the given "
-                f"Tb {self.Tb} and inference sampling rate "
-                f"{self.inference_sampling_rate}, this will generate a large "
-                "amount of data, and the aggregation process will be slow. It "
-                "is not recommended to save the output timeseries for long "
-                "timeslides or high inference rates",
-                stacklevel=2.0,
-            )
 
     @property
     def default_image(self):
@@ -108,12 +87,8 @@ class InferBase(
         return self.tmp_dir / "background.hdf5"
 
     @property
-    def timeseries_output(self):
-        return self.tmp_dir / "timeseries.hdf5"
-
-    @property
-    def metadata_output(self):
-        return self.tmp_dir / "metadata.json"
+    def zero_lag_output(self):
+        return self.tmp_dir / "0lag.hdf5"
 
     @property
     def background_fnames(self):
@@ -141,14 +116,11 @@ class InferBase(
         # given the duration of the background segments
         segments = data_utils.segments_from_paths(self.background_fnames)
         num_shifts = data_utils.get_num_shifts_from_Tb(
-            segments,
-            self.Tb,
-            max(self.shifts),
-            self.psd_length,
+            segments, self.Tb, max(self.shifts)
         )
         return num_shifts
 
-    @law.dynamic_workflow_condition(cache_met_condition=True)
+    @law.dynamic_workflow_condition
     def workflow_condition(self) -> bool:
         return self.workflow_input()["data"].collection.exists()
 
@@ -195,9 +167,6 @@ class InferBase(
         outputs = {}
         outputs["foreground"] = law.LocalFileTarget(self.foreground_output)
         outputs["background"] = law.LocalFileTarget(self.background_output)
-        outputs["metadata"] = law.LocalFileTarget(self.metadata_output)
-        if self.return_timeseries:
-            outputs["timeseries"] = law.LocalFileTarget(self.timeseries_output)
         return outputs
 
     def run(self):
@@ -238,32 +207,7 @@ class InferBase(
         )
 
         with client:
-            outputs = infer(
-                client, sequence, postprocessor, self.return_timeseries
-            )
-        if self.return_timeseries:
-            background, foreground, background_ts, foreground_ts = outputs
-            with h5py.File(self.timeseries_output, "w") as f:
-                f.attrs["t0"] = postprocessor.t0
-                f.attrs["shifts"] = postprocessor.shifts
-                f.create_dataset("background", data=background_ts)
-                if foreground_ts is None:
-                    foreground_ts = np.zeros(0)
-                f.create_dataset("foreground", data=foreground_ts)
-        else:
-            background, foreground = outputs
+            background, foreground = infer(client, sequence, postprocessor)
 
         background.write(self.background_output)
         foreground.write(self.foreground_output)
-
-        # Create metadata files to store key information.
-        # Although this information is also contained in
-        # the hdf5 files that get created, reading these
-        # json files seems to be O(1000) times faster.
-        metadata = {
-            "background_length": len(background),
-            "foreground_length": len(foreground),
-            "shifts": shifts,
-        }
-        with open(self.metadata_output, "w") as f:
-            json.dump(metadata, f)

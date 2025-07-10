@@ -1,5 +1,6 @@
 from jsonargparse import ActionConfigFile, ArgumentParser
 
+from data.authenticate import authenticate
 from data.fetch.main import main as fetch
 from data.fetch.main import parser as fetch_parser
 from data.segments.main import main as query_segments
@@ -28,6 +29,7 @@ def main(args=None):
 
     args = parser.parse_args(args)
     configure_logging(args.log_file)
+    authenticate()
 
     if args.subcommand == "query":
         query_segments(args)
