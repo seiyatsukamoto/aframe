@@ -1,0 +1,21 @@
+universe = vanilla
+executable = htcondor_wrapper_92f95fd2e6_65.sh
+should_transfer_files = YES
+transfer_input_files = /home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms/jobs/law_job_0e5c1d7d9a.sh,/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms/jobs/htcondor_wrapper_92f95fd2e6_65.sh
+notification = Never
+initialdir = /home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms
+stream_error = True
+stream_output = True
+accounting_group = ligo.dev.o4.cbc.allsky.aframe
+accounting_group_user = seiya.tsukamoto
+request_disk = 200MB
+request_cpus = 1
+request_memory = 16GB
+log = /home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms/logs/deploytestingwaveforms-$(ProcID).log
+output = /home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms/logs/deploytestingwaveforms-$(ProcID).out
+error = /home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms/logs/deploytestingwaveforms-$(ProcID).err
+environment = "KRB5_KTNAME=/home/seiya.tsukamoto/.kerberos/ligo.org.keytab X509_USER_PROXY=None GWDATAFIND_SERVER=datafind.ldas.cit:80 NDSSERVER=nds-1.ldas.cit:31200 LIGO_USERNAME=seiya.tsukamoto DEFAULT_SEGMENT_SERVER=http://segments.ldas.cit AWS_ENDPOINT_URL=None PATH=/home/seiya.tsukamoto/aframe/.venv/bin:/usr/share/Modules/bin:/opt/intel/oneapi/vtune/2025.0/bin64:/opt/intel/oneapi/vpl/2022.2.5/bin:/opt/intel/oneapi/mkl/2025.0/bin:/opt/intel/oneapi/itac/2021.10.0/bin:/opt/intel/oneapi/inspector/2023.2.0/bin64:/opt/intel/oneapi/dpcpp-ct/2025.0/bin:/opt/intel/oneapi/dev-utilities/2025.0/bin:/opt/intel/oneapi/debugger/2025.0/opt/debugger/bin:/opt/intel/oneapi/compiler/2025.0/bin:/opt/intel/oneapi/clck/2021.7.1/bin/intel64:/opt/intel/oneapi/advisor/2025.0/bin64:/cvmfs/software.igwn.org/conda/envs/igwn-py310-20250604/epics/bin/linux-x86_64:/home/seiya.tsukamoto/.conda/envs/aframe/bin:/cvmfs/software.igwn.org/conda/condabin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/dcs/bin:/opt/puppetlabs/bin:/home/seiya.tsukamoto/bin LAW_CONFIG_FILE=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/sandbox.cfg USER=seiya.tsukamoto AFRAME_CONDOR_DIR=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor AFRAME_CONTAINER_ROOT=/home/seiya.tsukamoto/aframe/images/ AFRAME_RESULTS_DIR=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/results AFRAME_TEST_DATA_DIR=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/data/test AFRAME_TMPDIR=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/tmp/ AFRAME_TRAIN_DATA_DIR=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/data/train AFRAME_TRAIN_RUN_DIR=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/training  LAW_HTCONDOR_JOB_CLUSTER=$(Cluster) LAW_HTCONDOR_JOB_PROCESS=$(Process)"
+queue law_job_postfix, arguments from (
+    _1094To1095, _1094To1095 ''
+    _1096To1097, _1096To1097 ''
+)

@@ -1,0 +1,227 @@
+running htcondor_wrapper_92f95fd2e6.sh for job number 533
+render law_job_0e5c1d7d9a.sh
+
+================================================================================
+=== Start of law job
+================================================================================
+
+law remote job script
+=====================
+10/07/2025 16:12:07.449975363 (PDT)
+
+-- environment -------------------------------------------------------------------------------------
+
+-- host infos
+> uname -a
+Linux node2409 4.18.0-553.58.1.el8_10.x86_64 #1 SMP Thu Jun 26 15:50:39 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
+
+> hostnamectl status
+   Static hostname: node2409
+         Icon name: computer-server
+           Chassis: server
+        Machine ID: 7c60ba7546774b4993450064b1a7d64c
+           Boot ID: 2cc12396cb504e9d8325c6c6a22fb6ca
+  Operating System: Rocky Linux 8.10 (Green Obsidian)
+       CPE OS Name: cpe:/o:rocky:rocky:8:GA
+            Kernel: Linux 4.18.0-553.58.1.el8_10.x86_64
+      Architecture: x86-64
+
+-- job infos
+shell    : /bin/bash
+hostname : node2409
+python   : Python 3.10.18 from /home/seiya.tsukamoto/aframe/.venv/bin/python
+python3  : Python 3.10.18 from /home/seiya.tsukamoto/aframe/.venv/bin/python3
+init dir : /var/lib/condor/execute/dir_980031
+job home : /var/lib/condor/execute/dir_980031/job_x6SqbmNRbIQu
+tmp dir  : /var/lib/condor/execute/dir_980031/job_x6SqbmNRbIQu/tmp
+user home: /home/seiya.tsukamoto
+pwd      : /var/lib/condor/execute/dir_980031
+script   : law_job_0e5c1d7d9a.sh
+args     : aframe.tasks.data.waveforms.testing DeployTestingWaveforms LS1sb2ctZmlsZT1OT19TVFIgLS1jbGVhci1sb2dzPUZhbHNlIC0tZGV2PVRydWUgLS1ncHVzPTAsMiwzIC0taW1hZ2U9L2hvbWUvc2VpeWEudHN1a2Ftb3RvL2FmcmFtZS9pbWFnZXMvZGF0YS5zaWYgLS1jb250YWluZXItcm9vdD0vaG9tZS9zZWl5YS50c3VrYW1vdG8vYWZyYW1lL2ltYWdlcy8gLS1qb2ItbG9nPScnIC0tYWNjb3VudGluZy1ncm91cC11c2VyPXNlaXlhLnRzdWthbW90byAtLWFjY291bnRpbmctZ3JvdXA9bGlnby5kZXYubzQuY2JjLmFsbHNreS5hZnJhbWUgLS1yZXF1ZXN0LWRpc2s9MjAwTUIgLS1yZXF1ZXN0LW1lbW9yeT0xNkdCIC0tcmVxdWVzdC1jcHVzPTEgLS1udW0tc2lnbmFscz01MDAwMDAgLS1zYW1wbGUtcmF0ZT0yMDQ4LjAgLS13YXZlZm9ybS1kdXJhdGlvbj04LjAgLS1wcmlvcj1wcmlvcnMucHJpb3JzLmVuZF9vM19yYXRlc2FuZHBvcHMgLS1taW5pbXVtLWZyZXF1ZW5jeT0yMC4wIC0tcmVmZXJlbmNlLWZyZXF1ZW5jeT01MC4wIC0td2F2ZWZvcm0tYXBwcm94aW1hbnQ9SU1SUGhlbm9tWFBITSAtLWNvYWxlc2NlbmNlLXRpbWU9NC4wIC0tc3RhcnQ9MTI0MTQ0Mzc4My4wIC0tZW5kPTEyNDQwMzU3ODMuMCAtLWlmb3M9J1siSDEiLCAiTDEiXScgLS1zaGlmdHM9J1swLCAxXScgLS1zcGFjaW5nPTE2LjAgLS1idWZmZXI9MTYuMCAtLWhpZ2hwYXNzPTMyLjAgLS1sb3dwYXNzPScnIC0tc25yLXRocmVzaG9sZD00LjAgLS1wc2QtbGVuZ3RoPTY0LjAgLS1zZWVkPTExMjIgLS1vdXRwdXQtZGlyPS9ob21lL3NlaXlhLnRzdWthbW90by9hZnJhbWUvbG93LWhpZ2gtcGFzcy1tdWx0aW1vZGFsL2RhdGEvdGVzdCAtLWNvbmRvci1kaXJlY3Rvcnk9L2hvbWUvc2VpeWEudHN1a2Ftb3RvL2FmcmFtZS9sb3ctaGlnaC1wYXNzLW11bHRpbW9kYWwvY29uZG9yL3Rlc3Rpbmdfd2F2ZWZvcm1zIC0tbG9jYWwtc2NoZWR1bGVyPVRydWU= NTMy 1 no LQ==
+
+-- task infos
+task module   : aframe.tasks.data.waveforms.testing
+task family   : DeployTestingWaveforms
+task params   : --log-file=NO_STR --clear-logs=False --dev=True --gpus=0,2,3 --image=/home/seiya.tsukamoto/aframe/images/data.sif --container-root=/home/seiya.tsukamoto/aframe/images/ --job-log='' --accounting-group-user=seiya.tsukamoto --accounting-group=ligo.dev.o4.cbc.allsky.aframe --request-disk=200MB --request-memory=16GB --request-cpus=1 --num-signals=500000 --sample-rate=2048.0 --waveform-duration=8.0 --prior=priors.priors.end_o3_ratesandpops --minimum-frequency=20.0 --reference-frequency=50.0 --waveform-approximant=IMRPhenomXPHM --coalescence-time=4.0 --start=1241443783.0 --end=1244035783.0 --ifos='["H1", "L1"]' --shifts='[0, 1]' --spacing=16.0 --buffer=16.0 --highpass=32.0 --lowpass='' --snr-threshold=4.0 --psd-length=64.0 --seed=1122 --output-dir=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/data/test --condor-directory=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms --local-scheduler=True
+branches      : 532
+job workers   : 1
+auto retry    : no
+dashboard data: -
+
+-- files in LAW_JOB_INIT_DIR
+> pwd
+/var/lib/condor/execute/dir_980031
+> ls -la
+total 3954
+-rw-r--r--  1 seiya.tsukamoto seiya.tsukamoto    4042 Jul 10 16:12 ''
+drwx------  5 seiya.tsukamoto seiya.tsukamoto    1024 Jul 10 16:12 .
+drwxrwxrwt 56 condor          condor             4096 Jul 10 16:12 ..
+-rwx------  1 seiya.tsukamoto seiya.tsukamoto      48 Jul 10 16:12 .chirp.config
+-rw-r--r--  1 seiya.tsukamoto seiya.tsukamoto    7086 Jul 10 16:12 .job.ad
+-rw-r--r--  1 seiya.tsukamoto seiya.tsukamoto    9261 Jul 10 16:12 .machine.ad
+-rwxr-xr-x  1 seiya.tsukamoto seiya.tsukamoto 3993027 Jul 10 16:12 htcondor_wrapper_92f95fd2e6.sh
+drwx------  3 seiya.tsukamoto seiya.tsukamoto    1024 Jul 10 16:12 job_x6SqbmNRbIQu
+-rwxrwxr-x  1 seiya.tsukamoto seiya.tsukamoto   20110 Jul 10 16:12 law_job_0e5c1d7d9a.sh
+drwx------  2 seiya.tsukamoto seiya.tsukamoto    1024 Jul 10 16:12 tmp
+drwx------  3 seiya.tsukamoto seiya.tsukamoto    1024 Jul 10 16:12 var
+
+-- link input files
+link /var/lib/condor/execute/dir_980031/htcondor_wrapper_92f95fd2e6.sh
+
+-- files in LAW_JOB_HOME
+> pwd
+/var/lib/condor/execute/dir_980031/job_x6SqbmNRbIQu
+> ls -la
+total 4
+drwx------ 3 seiya.tsukamoto seiya.tsukamoto 1024 Jul 10 16:12 .
+drwx------ 5 seiya.tsukamoto seiya.tsukamoto 1024 Jul 10 16:12 ..
+lrwxrwxrwx 1 seiya.tsukamoto seiya.tsukamoto   65 Jul 10 16:12 htcondor_wrapper_92f95fd2e6.sh -> /var/lib/condor/execute/dir_980031/htcondor_wrapper_92f95fd2e6.sh
+drwxr-xr-x 2 seiya.tsukamoto seiya.tsukamoto 1024 Jul 10 16:12 tmp
+
+-- setup -------------------------------------------------------------------------------------------
+
+-- bootstrap file
+bootstrap file empty, skip
+
+-- bootstrap command
+bootstrap command empty, skip
+
+-- detect law
+found law at /home/seiya.tsukamoto/aframe/.venv/lib/python3.10/site-packages/law
+
+-- setup dashboard
+dashboard file empty, skip
+
+-- environment variables
+PATH           : /home/seiya.tsukamoto/aframe/.venv/bin:/usr/share/Modules/bin:/opt/intel/oneapi/vtune/2025.0/bin64:/opt/intel/oneapi/vpl/2022.2.5/bin:/opt/intel/oneapi/mkl/2025.0/bin:/opt/intel/oneapi/itac/2021.10.0/bin:/opt/intel/oneapi/inspector/2023.2.0/bin64:/opt/intel/oneapi/dpcpp-ct/2025.0/bin:/opt/intel/oneapi/dev-utilities/2025.0/bin:/opt/intel/oneapi/debugger/2025.0/opt/debugger/bin:/opt/intel/oneapi/compiler/2025.0/bin:/opt/intel/oneapi/clck/2021.7.1/bin/intel64:/opt/intel/oneapi/advisor/2025.0/bin64:/cvmfs/software.igwn.org/conda/envs/igwn-py310-20250604/epics/bin/linux-x86_64:/home/seiya.tsukamoto/.conda/envs/aframe/bin:/cvmfs/software.igwn.org/conda/condabin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/dcs/bin:/opt/puppetlabs/bin:/home/seiya.tsukamoto/bin
+PYTHONPATH     : 
+LD_LIBRARY_PATH: 
+CPATH          : 
+
+-- hook law_hook_job_running -----------------------------------------------------------------------
+
+function 'law_hook_job_running' does not exist, skip
+
+-- run task branch 532 -----------------------------------------------------------------------------
+
+cmd: law run aframe.tasks.data.waveforms.testing.DeployTestingWaveforms --log-file=NO_STR --clear-logs=False --dev=True --gpus=0,2,3 --image=/home/seiya.tsukamoto/aframe/images/data.sif --container-root=/home/seiya.tsukamoto/aframe/images/ --job-log='' --accounting-group-user=seiya.tsukamoto --accounting-group=ligo.dev.o4.cbc.allsky.aframe --request-disk=200MB --request-memory=16GB --request-cpus=1 --num-signals=500000 --sample-rate=2048.0 --waveform-duration=8.0 --prior=priors.priors.end_o3_ratesandpops --minimum-frequency=20.0 --reference-frequency=50.0 --waveform-approximant=IMRPhenomXPHM --coalescence-time=4.0 --start=1241443783.0 --end=1244035783.0 --ifos='["H1", "L1"]' --shifts='[0, 1]' --spacing=16.0 --buffer=16.0 --highpass=32.0 --lowpass='' --snr-threshold=4.0 --psd-length=64.0 --seed=1122 --output-dir=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/data/test --condor-directory=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms --local-scheduler=True --branch=532  --workers=1
+
+-- dependency tree
+print task dependencies with max_depth 2
+
+0 > DeployTestingWaveforms(effective_workflow=htcondor, branch=532, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, num_signals=500000, sample_rate=2048.0, waveform_duration=8.0, prior=priors.priors.end_o3_ratesandpops, minimum_frequency=20.0, reference_frequency=50.0, waveform_approximant=IMRPhenomXPHM, coalescence_time=4.0, start=1241443783.0, end=1244035783.0, ifos=["H1", "L1"], shifts=[0, 1], spacing=16.0, buffer=16.0, highpass=32.0, lowpass=, snr_threshold=4.0, psd_length=64.0, seed=1122, output_dir=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/data/test, condor_directory=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms)
+
+-- execute attempt 1
+10/07/2025 16:12:09.968933290 (PDT)
+INFO: luigi-interface - Informed scheduler that task   DeployTestingWaveforms_ligo_dev_o4_cbc__seiya_tsukamoto_532_9fae169f3e   has status   PENDING
+INFO: Informed scheduler that task   DeployTestingWaveforms_ligo_dev_o4_cbc__seiya_tsukamoto_532_9fae169f3e   has status   PENDING
+INFO: luigi-interface - Done scheduling tasks
+INFO: Done scheduling tasks
+INFO: luigi-interface - Running Worker with 1 processes
+INFO: Running Worker with 1 processes
+INFO: luigi-interface - [pid 980202] Worker Worker(salt=6492435278, workers=1, host=node2409, username=seiya.tsukamoto, pid=980202) running   DeployTestingWaveforms(effective_workflow=htcondor, branch=532, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, num_signals=500000, sample_rate=2048.0, waveform_duration=8.0, prior=priors.priors.end_o3_ratesandpops, minimum_frequency=20.0, reference_frequency=50.0, waveform_approximant=IMRPhenomXPHM, coalescence_time=4.0, start=1241443783.0, end=1244035783.0, ifos=["H1", "L1"], shifts=[0, 1], spacing=16.0, buffer=16.0, highpass=32.0, lowpass=, snr_threshold=4.0, psd_length=64.0, seed=1122, output_dir=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/data/test, condor_directory=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms)
+INFO: [pid 980202] Worker Worker(salt=6492435278, workers=1, host=node2409, username=seiya.tsukamoto, pid=980202) running   DeployTestingWaveforms(effective_workflow=htcondor, branch=532, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, num_signals=500000, sample_rate=2048.0, waveform_duration=8.0, prior=priors.priors.end_o3_ratesandpops, minimum_frequency=20.0, reference_frequency=50.0, waveform_approximant=IMRPhenomXPHM, coalescence_time=4.0, start=1241443783.0, end=1244035783.0, ifos=["H1", "L1"], shifts=[0, 1], spacing=16.0, buffer=16.0, highpass=32.0, lowpass=, snr_threshold=4.0, psd_length=64.0, seed=1122, output_dir=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/data/test, condor_directory=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms)
+
+=============================== entering sandbox ===============================
+task   : DeployTestingWaveforms_ligo_dev_o4_cbc__seiya_tsukamoto_532_9fae169f3e
+sandbox: aframe_datagen::/home/seiya.tsukamoto/aframe/images/data.sif
+================================================================================
+
+INFO:    underlay of /usr/bin/nvidia-smi required more than 50 (386) bind mounts
+INFO: luigi-interface - Done scheduling tasks
+INFO: Done scheduling tasks
+INFO: luigi-interface - Running Worker with 1 processes
+INFO: Running Worker with 1 processes
+INFO: luigi-interface - [pid 980417] Worker Worker(salt=6492435278, workers=1, host=node2409, username=seiya.tsukamoto, pid=980202) running   DeployTestingWaveforms(effective_workflow=htcondor, branch=532, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, num_signals=500000, sample_rate=2048.0, waveform_duration=8.0, prior=priors.priors.end_o3_ratesandpops, minimum_frequency=20.0, reference_frequency=50.0, waveform_approximant=IMRPhenomXPHM, coalescence_time=4.0, start=1241443783.0, end=1244035783.0, ifos=["H1", "L1"], shifts=[0, 1], spacing=16.0, buffer=16.0, highpass=32.0, lowpass=, snr_threshold=4.0, psd_length=64.0, seed=1122, output_dir=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/data/test, condor_directory=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms)
+INFO: [pid 980417] Worker Worker(salt=6492435278, workers=1, host=node2409, username=seiya.tsukamoto, pid=980202) running   DeployTestingWaveforms(effective_workflow=htcondor, branch=532, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, num_signals=500000, sample_rate=2048.0, waveform_duration=8.0, prior=priors.priors.end_o3_ratesandpops, minimum_frequency=20.0, reference_frequency=50.0, waveform_approximant=IMRPhenomXPHM, coalescence_time=4.0, start=1241443783.0, end=1244035783.0, ifos=["H1", "L1"], shifts=[0, 1], spacing=16.0, buffer=16.0, highpass=32.0, lowpass=, snr_threshold=4.0, psd_length=64.0, seed=1122, output_dir=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/data/test, condor_directory=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms)
+PyCBC.libutils: pkg-config call failed, setting NO_PKGCONFIG=1
+INFO: luigi-interface - [pid 980417] Worker Worker(salt=6492435278, workers=1, host=node2409, username=seiya.tsukamoto, pid=980202) done      DeployTestingWaveforms(effective_workflow=htcondor, branch=532, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, num_signals=500000, sample_rate=2048.0, waveform_duration=8.0, prior=priors.priors.end_o3_ratesandpops, minimum_frequency=20.0, reference_frequency=50.0, waveform_approximant=IMRPhenomXPHM, coalescence_time=4.0, start=1241443783.0, end=1244035783.0, ifos=["H1", "L1"], shifts=[0, 1], spacing=16.0, buffer=16.0, highpass=32.0, lowpass=, snr_threshold=4.0, psd_length=64.0, seed=1122, output_dir=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/data/test, condor_directory=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms)
+INFO: [pid 980417] Worker Worker(salt=6492435278, workers=1, host=node2409, username=seiya.tsukamoto, pid=980202) done      DeployTestingWaveforms(effective_workflow=htcondor, branch=532, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, num_signals=500000, sample_rate=2048.0, waveform_duration=8.0, prior=priors.priors.end_o3_ratesandpops, minimum_frequency=20.0, reference_frequency=50.0, waveform_approximant=IMRPhenomXPHM, coalescence_time=4.0, start=1241443783.0, end=1244035783.0, ifos=["H1", "L1"], shifts=[0, 1], spacing=16.0, buffer=16.0, highpass=32.0, lowpass=, snr_threshold=4.0, psd_length=64.0, seed=1122, output_dir=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/data/test, condor_directory=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms)
+INFO:luigi-interface:[pid 980417] Worker Worker(salt=6492435278, workers=1, host=node2409, username=seiya.tsukamoto, pid=980202) done      DeployTestingWaveforms(effective_workflow=htcondor, branch=532, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, num_signals=500000, sample_rate=2048.0, waveform_duration=8.0, prior=priors.priors.end_o3_ratesandpops, minimum_frequency=20.0, reference_frequency=50.0, waveform_approximant=IMRPhenomXPHM, coalescence_time=4.0, start=1241443783.0, end=1244035783.0, ifos=["H1", "L1"], shifts=[0, 1], spacing=16.0, buffer=16.0, highpass=32.0, lowpass=, snr_threshold=4.0, psd_length=64.0, seed=1122, output_dir=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/data/test, condor_directory=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms)
+INFO: luigi-interface - This progress looks :) because there were no failed tasks or missing dependencies
+INFO: This progress looks :) because there were no failed tasks or missing dependencies
+INFO:luigi-interface:This progress looks :) because there were no failed tasks or missing dependencies
+
+=============================== leaving sandbox ================================
+task   : DeployTestingWaveforms_ligo_dev_o4_cbc__seiya_tsukamoto_532_9fae169f3e
+sandbox: aframe_datagen::/home/seiya.tsukamoto/aframe/images/data.sif
+================================================================================
+
+INFO: luigi-interface - [pid 980202] Worker Worker(salt=6492435278, workers=1, host=node2409, username=seiya.tsukamoto, pid=980202) done      DeployTestingWaveforms(effective_workflow=htcondor, branch=532, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, num_signals=500000, sample_rate=2048.0, waveform_duration=8.0, prior=priors.priors.end_o3_ratesandpops, minimum_frequency=20.0, reference_frequency=50.0, waveform_approximant=IMRPhenomXPHM, coalescence_time=4.0, start=1241443783.0, end=1244035783.0, ifos=["H1", "L1"], shifts=[0, 1], spacing=16.0, buffer=16.0, highpass=32.0, lowpass=, snr_threshold=4.0, psd_length=64.0, seed=1122, output_dir=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/data/test, condor_directory=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms)
+INFO: [pid 980202] Worker Worker(salt=6492435278, workers=1, host=node2409, username=seiya.tsukamoto, pid=980202) done      DeployTestingWaveforms(effective_workflow=htcondor, branch=532, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, num_signals=500000, sample_rate=2048.0, waveform_duration=8.0, prior=priors.priors.end_o3_ratesandpops, minimum_frequency=20.0, reference_frequency=50.0, waveform_approximant=IMRPhenomXPHM, coalescence_time=4.0, start=1241443783.0, end=1244035783.0, ifos=["H1", "L1"], shifts=[0, 1], spacing=16.0, buffer=16.0, highpass=32.0, lowpass=, snr_threshold=4.0, psd_length=64.0, seed=1122, output_dir=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/data/test, condor_directory=/home/seiya.tsukamoto/aframe/low-high-pass-multimodal/condor/testing_waveforms)
+INFO: luigi-interface - Informed scheduler that task   DeployTestingWaveforms_ligo_dev_o4_cbc__seiya_tsukamoto_532_9fae169f3e   has status   DONE
+INFO: Informed scheduler that task   DeployTestingWaveforms_ligo_dev_o4_cbc__seiya_tsukamoto_532_9fae169f3e   has status   DONE
+INFO: luigi-interface - Worker Worker(salt=6492435278, workers=1, host=node2409, username=seiya.tsukamoto, pid=980202) was stopped. Shutting down Keep-Alive thread
+INFO: Worker Worker(salt=6492435278, workers=1, host=node2409, username=seiya.tsukamoto, pid=980202) was stopped. Shutting down Keep-Alive thread
+INFO: luigi-interface - 
+===== Luigi Execution Summary =====
+
+Scheduled 1 tasks of which:
+* 1 ran successfully:
+    - 1 DeployTestingWaveforms(...)
+
+This progress looks :) because there were no failed tasks or missing dependencies
+
+===== Luigi Execution Summary =====
+
+INFO: 
+===== Luigi Execution Summary =====
+
+Scheduled 1 tasks of which:
+* 1 ran successfully:
+    - 1 DeployTestingWaveforms(...)
+
+This progress looks :) because there were no failed tasks or missing dependencies
+
+===== Luigi Execution Summary =====
+
+task exit code: 0
+10/07/2025 16:43:09.869367971 (PDT)
+
+-- hook law_hook_job_finished ----------------------------------------------------------------------
+
+function 'law_hook_job_finished' does not exist, skip
+
+-- stageout ----------------------------------------------------------------------------------------
+
+-- stageout file
+stageout file empty, skip
+
+-- stageout command
+stageout command empty, skip
+
+-- cleanup -----------------------------------------------------------------------------------------
+
+-- files before cleanup
+> ls -a /var/lib/condor/execute/dir_980031/job_x6SqbmNRbIQu ($LAW_JOB_HOME)
+total 4
+drwx------ 3 seiya.tsukamoto seiya.tsukamoto 1024 Jul 10 16:12 .
+drwx------ 5 seiya.tsukamoto seiya.tsukamoto 1024 Jul 10 16:12 ..
+lrwxrwxrwx 1 seiya.tsukamoto seiya.tsukamoto   65 Jul 10 16:12 htcondor_wrapper_92f95fd2e6.sh -> /var/lib/condor/execute/dir_980031/htcondor_wrapper_92f95fd2e6.sh
+drwxr-xr-x 3 seiya.tsukamoto seiya.tsukamoto 1024 Jul 10 16:43 tmp
+
+-- files after cleanup
+> ls -a /var/lib/condor/execute/dir_980031 ($LAW_JOB_INIT_DIR)
+total 3971
+-rw-r--r--  1 seiya.tsukamoto seiya.tsukamoto   21412 Jul 10 16:43 ''
+drwx------  4 seiya.tsukamoto seiya.tsukamoto    1024 Jul 10 16:43 .
+drwxrwxrwt 55 condor          condor             4096 Jul 10 16:35 ..
+-rwx------  1 seiya.tsukamoto seiya.tsukamoto      48 Jul 10 16:12 .chirp.config
+-rw-r--r--  1 seiya.tsukamoto seiya.tsukamoto    7086 Jul 10 16:12 .job.ad
+-rw-r--r--  1 seiya.tsukamoto seiya.tsukamoto    9261 Jul 10 16:12 .machine.ad
+-rwxr-xr-x  1 seiya.tsukamoto seiya.tsukamoto 3993027 Jul 10 16:12 htcondor_wrapper_92f95fd2e6.sh
+-rwxrwxr-x  1 seiya.tsukamoto seiya.tsukamoto   20110 Jul 10 16:12 law_job_0e5c1d7d9a.sh
+drwx------  3 seiya.tsukamoto seiya.tsukamoto    1024 Jul 10 16:12 tmp
+drwx------  3 seiya.tsukamoto seiya.tsukamoto    1024 Jul 10 16:12 var
+
+-- end ---------------------------------------------------------------------------------------------
+
+start time    : 10/07/2025 16:12:07.449975363 (PDT)
+end time      : 10/07/2025 16:43:09.905155841 (PDT)
+job exit code : 0
+
+
+================================================================================
+=== End of law job
+================================================================================
+
