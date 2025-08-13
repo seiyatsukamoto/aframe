@@ -3,5 +3,10 @@ from .supervised import (
     SupervisedArchitecture,
     SupervisedFrequencyDomainResNet,
     SupervisedSpectrogramDomainResNet,
-    SupervisedTimeDomainResNet,
+    SupervisedTimeDomainResNet
+)
+
+from .bandpass import (
+    Bandpass,
+    SupervisedFrequencyDomainResNetClasses
 )

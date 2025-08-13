@@ -1,0 +1,40 @@
+universe = vanilla
+executable = htcondor_wrapper_22563d22c3.sh
+should_transfer_files = YES
+transfer_input_files = /home/seiya.tsukamoto/aframe/layered/condor/validation_waveforms/jobs/law_job_8a695babfb.sh,/home/seiya.tsukamoto/aframe/layered/condor/validation_waveforms/jobs/htcondor_wrapper_22563d22c3.sh
+notification = Never
+initialdir = /home/seiya.tsukamoto/aframe/layered/condor/validation_waveforms
+use_oauth_services = scitokens
+stream_error = True
+stream_output = True
+accounting_group = ligo.dev.o4.cbc.allsky.aframe
+accounting_group_user = seiya.tsukamoto
+request_disk = 200MB
+request_cpus = 1
+request_memory = 16GB
+log = /home/seiya.tsukamoto/aframe/layered/condor/validation_waveforms/logs/deployvalidationwaveforms-$(ProcID).log
+output = /home/seiya.tsukamoto/aframe/layered/condor/validation_waveforms/logs/deployvalidationwaveforms-$(ProcID).out
+error = /home/seiya.tsukamoto/aframe/layered/condor/validation_waveforms/logs/deployvalidationwaveforms-$(ProcID).err
+environment = "KRB5_KTNAME=None X509_USER_PROXY=None GWDATAFIND_SERVER=10.21.201.15:80 NDSSERVER=10.21.201.211:31200 LIGO_USERNAME=seiya.tsukamoto DEFAULT_SEGMENT_SERVER=https://segments.ligo.org AWS_ENDPOINT_URL=None PATH=/home/seiya.tsukamoto/aframe/.venv/bin:/usr/share/Modules/bin:/usr/lib/jvm/jre/bin:/cvmfs/software.igwn.org/conda/envs/igwn-py310-20250604/epics/bin/linux-x86_64:/home/seiya.tsukamoto/.conda/envs/aframe/bin:/cvmfs/software.igwn.org/conda/condabin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/ldcg/matlab_r2020b/bin:/opt/puppetlabs/bin:/home/seiya.tsukamoto/.local/bin:/home/seiya.tsukamoto/bin LAW_CONFIG_FILE=/home/seiya.tsukamoto/aframe/layered/sandbox.cfg USER=seiya.tsukamoto AFRAME_CONDOR_DIR=/home/seiya.tsukamoto/aframe/layered/condor AFRAME_CONTAINER_ROOT=/home/seiya.tsukamoto/aframe/images/ AFRAME_RESULTS_DIR=/home/seiya.tsukamoto/aframe/layered/results AFRAME_TEST_DATA_DIR=/home/seiya.tsukamoto/aframe/layered/data/test AFRAME_TMPDIR=/home/seiya.tsukamoto/aframe/layered/tmp/ AFRAME_TRAIN_DATA_DIR=/home/seiya.tsukamoto/aframe/layered/data/train AFRAME_TRAIN_RUN_DIR=/home/seiya.tsukamoto/aframe/layered/training  LAW_HTCONDOR_JOB_CLUSTER=$(Cluster) LAW_HTCONDOR_JOB_PROCESS=$(Process)"
+queue law_job_postfix, arguments from (
+    _0To1, _0To1 ''
+    _1To2, _1To2 ''
+    _2To3, _2To3 ''
+    _3To4, _3To4 ''
+    _4To5, _4To5 ''
+    _5To6, _5To6 ''
+    _6To7, _6To7 ''
+    _7To8, _7To8 ''
+    _8To9, _8To9 ''
+    _9To10, _9To10 ''
+    _10To11, _10To11 ''
+    _11To12, _11To12 ''
+    _12To13, _12To13 ''
+    _13To14, _13To14 ''
+    _14To15, _14To15 ''
+    _15To16, _15To16 ''
+    _16To17, _16To17 ''
+    _17To18, _17To18 ''
+    _18To19, _18To19 ''
+    _19To20, _19To20 ''
+)

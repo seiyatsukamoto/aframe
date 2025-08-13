@@ -1,0 +1,238 @@
+running htcondor_wrapper_22563d22c3.sh for job number 40
+render law_job_8a695babfb.sh
+
+================================================================================
+=== Start of law job
+================================================================================
+
+law remote job script
+=====================
+24/07/2025 10:06:30.609820190 (PDT)
+
+-- environment -------------------------------------------------------------------------------------
+
+-- host infos
+> uname -a
+Linux node023 4.18.0-553.62.1.el8_10.x86_64 #1 SMP Wed Jul 16 17:48:30 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
+
+> lsb_release -a
+LSB Version:	:core-4.1-amd64:core-4.1-noarch
+Distributor ID:	Rocky
+Description:	Rocky Linux release 8.10 (Green Obsidian)
+Release:	8.10
+Codename:	GreenObsidian
+
+> hostnamectl status
+   Static hostname: node023
+         Icon name: computer-server
+           Chassis: server
+        Machine ID: 50b2401c7f8c48e3bce5ff5b02ecc4ee
+           Boot ID: 2c439e681ea04bfb802bc17256b5d594
+  Operating System: Rocky Linux 8.10 (Green Obsidian)
+       CPE OS Name: cpe:/o:rocky:rocky:8:GA
+            Kernel: Linux 4.18.0-553.62.1.el8_10.x86_64
+      Architecture: x86-64
+
+-- job infos
+shell    : /bin/bash
+hostname : node023
+python   : Python 3.9.23 from /home/seiya.tsukamoto/aframe/.venv/bin/python
+python3  : Python 3.9.23 from /home/seiya.tsukamoto/aframe/.venv/bin/python3
+init dir : /var/lib/condor/execute/dir_81702
+job home : /var/lib/condor/execute/dir_81702/job_kUJAwnomlaaA
+tmp dir  : /var/lib/condor/execute/dir_81702/job_kUJAwnomlaaA/tmp
+user home: 
+pwd      : /var/lib/condor/execute/dir_81702
+script   : law_job_8a695babfb.sh
+args     : aframe.tasks.data.fetch FetchTrain LS1sb2ctZmlsZT1OT19TVFIgLS1jbGVhci1sb2dzPUZhbHNlIC0tZGV2PUZhbHNlIC0tZ3B1cz0wLDEsMiAtLWltYWdlPS9ob21lL3NlaXlhLnRzdWthbW90by9hZnJhbWUvaW1hZ2VzL2RhdGEuc2lmIC0tY29udGFpbmVyLXJvb3Q9L2hvbWUvc2VpeWEudHN1a2Ftb3RvL2FmcmFtZS9pbWFnZXMvIC0tam9iLWxvZz0nJyAtLWFjY291bnRpbmctZ3JvdXAtdXNlcj1zZWl5YS50c3VrYW1vdG8gLS1hY2NvdW50aW5nLWdyb3VwPWxpZ28uZGV2Lm80LmNiYy5hbGxza3kuYWZyYW1lIC0tcmVxdWVzdC1kaXNrPTIwME1CIC0tcmVxdWVzdC1tZW1vcnk9MTZHQiAtLXJlcXVlc3QtY3B1cz0xIC0tc3RhcnQ9MTI0MDU3OTc4My4wIC0tZW5kPTEyNDE0NDM3ODMuMCAtLWlmb3M9J1siSDEiLCAiTDEiXScgLS1mbGFnPURBVEEgLS1taW4tZHVyYXRpb249MTAyNC4wIC0tc2FtcGxlLXJhdGU9MjA0OC4wIC0tbWF4LWR1cmF0aW9uPTIwMDAwLjAgLS1wcmVmaXg9YmFja2dyb3VuZCAtLWNoYW5uZWxzPSdbIkgxIiwgIkwxIl0nIC0tY29uZG9yLWRpcmVjdG9yeT0vaG9tZS9zZWl5YS50c3VrYW1vdG8vYWZyYW1lL2xheWVyZWQvY29uZG9yL2ZldGNoX3RyYWluIC0tZGF0YS1kaXI9L2hvbWUvc2VpeWEudHN1a2Ftb3RvL2FmcmFtZS9sYXllcmVkL2RhdGEvdHJhaW4vYmFja2dyb3VuZCAtLXNlZ21lbnRzLWZpbGU9L2hvbWUvc2VpeWEudHN1a2Ftb3RvL2FmcmFtZS9sYXllcmVkL2RhdGEvdHJhaW4vc2VnbWVudHMudHh0IC0tbG9jYWwtc2NoZWR1bGVyPVRydWU= NDA= 1 no LQ==
+
+-- task infos
+task module   : aframe.tasks.data.fetch
+task family   : FetchTrain
+task params   : --log-file=NO_STR --clear-logs=False --dev=False --gpus=0,1,2 --image=/home/seiya.tsukamoto/aframe/images/data.sif --container-root=/home/seiya.tsukamoto/aframe/images/ --job-log='' --accounting-group-user=seiya.tsukamoto --accounting-group=ligo.dev.o4.cbc.allsky.aframe --request-disk=200MB --request-memory=16GB --request-cpus=1 --start=1240579783.0 --end=1241443783.0 --ifos='["H1", "L1"]' --flag=DATA --min-duration=1024.0 --sample-rate=2048.0 --max-duration=20000.0 --prefix=background --channels='["H1", "L1"]' --condor-directory=/home/seiya.tsukamoto/aframe/layered/condor/fetch_train --data-dir=/home/seiya.tsukamoto/aframe/layered/data/train/background --segments-file=/home/seiya.tsukamoto/aframe/layered/data/train/segments.txt --local-scheduler=True
+branches      : 40
+job workers   : 1
+auto retry    : no
+dashboard data: -
+
+-- files in LAW_JOB_INIT_DIR
+> pwd
+/var/lib/condor/execute/dir_81702
+> ls -la
+total 159
+-rw-r--r--   1 seiya.tsukamoto seiya.tsukamoto   3733 Jul 24 10:06 ''
+drwx------   6 seiya.tsukamoto seiya.tsukamoto   1024 Jul 24 10:06 .
+drwxrwxrwt. 11 condor          condor            4096 Jul 24 10:06 ..
+-rwx------   1 seiya.tsukamoto seiya.tsukamoto     48 Jul 24 10:06 .chirp.config
+drwxr-xr-x   2 seiya.tsukamoto seiya.tsukamoto   1024 Jul 24 10:06 .condor_creds
+-rw-r--r--   1 seiya.tsukamoto seiya.tsukamoto   5816 Jul 24 10:06 .job.ad
+-rw-r--r--   1 seiya.tsukamoto seiya.tsukamoto   7005 Jul 24 10:06 .machine.ad
+-rwxr-xr-x   1 seiya.tsukamoto seiya.tsukamoto 113841 Jul 24 10:06 htcondor_wrapper_22563d22c3.sh
+drwx------   3 seiya.tsukamoto seiya.tsukamoto   1024 Jul 24 10:06 job_kUJAwnomlaaA
+-rwxrwxr-x   1 seiya.tsukamoto seiya.tsukamoto  20110 Jul 24 10:06 law_job_8a695babfb.sh
+drwx------   2 seiya.tsukamoto seiya.tsukamoto   1024 Jul 24 10:06 tmp
+drwx------   3 seiya.tsukamoto seiya.tsukamoto   1024 Jul 24 10:06 var
+
+-- link input files
+link /var/lib/condor/execute/dir_81702/htcondor_wrapper_22563d22c3.sh
+
+-- files in LAW_JOB_HOME
+> pwd
+/var/lib/condor/execute/dir_81702/job_kUJAwnomlaaA
+> ls -la
+total 4
+drwx------ 3 seiya.tsukamoto seiya.tsukamoto 1024 Jul 24 10:06 .
+drwx------ 6 seiya.tsukamoto seiya.tsukamoto 1024 Jul 24 10:06 ..
+lrwxrwxrwx 1 seiya.tsukamoto seiya.tsukamoto   64 Jul 24 10:06 htcondor_wrapper_22563d22c3.sh -> /var/lib/condor/execute/dir_81702/htcondor_wrapper_22563d22c3.sh
+drwxr-xr-x 2 seiya.tsukamoto seiya.tsukamoto 1024 Jul 24 10:06 tmp
+
+-- setup -------------------------------------------------------------------------------------------
+
+-- bootstrap file
+bootstrap file empty, skip
+
+-- bootstrap command
+bootstrap command empty, skip
+
+-- detect law
+found law at /home/seiya.tsukamoto/aframe/.venv/lib/python3.9/site-packages/law
+
+-- setup dashboard
+dashboard file empty, skip
+
+-- environment variables
+PATH           : /home/seiya.tsukamoto/aframe/.venv/bin:/usr/share/Modules/bin:/usr/lib/jvm/jre/bin:/cvmfs/software.igwn.org/conda/envs/igwn-py310-20250604/epics/bin/linux-x86_64:/home/seiya.tsukamoto/.conda/envs/aframe/bin:/cvmfs/software.igwn.org/conda/condabin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/ldcg/matlab_r2020b/bin:/opt/puppetlabs/bin:/home/seiya.tsukamoto/.local/bin:/home/seiya.tsukamoto/bin
+PYTHONPATH     : 
+LD_LIBRARY_PATH: 
+CPATH          : 
+
+-- hook law_hook_job_running -----------------------------------------------------------------------
+
+function 'law_hook_job_running' does not exist, skip
+
+-- run task branch 40 ------------------------------------------------------------------------------
+
+cmd: law run aframe.tasks.data.fetch.FetchTrain --log-file=NO_STR --clear-logs=False --dev=False --gpus=0,1,2 --image=/home/seiya.tsukamoto/aframe/images/data.sif --container-root=/home/seiya.tsukamoto/aframe/images/ --job-log='' --accounting-group-user=seiya.tsukamoto --accounting-group=ligo.dev.o4.cbc.allsky.aframe --request-disk=200MB --request-memory=16GB --request-cpus=1 --start=1240579783.0 --end=1241443783.0 --ifos='["H1", "L1"]' --flag=DATA --min-duration=1024.0 --sample-rate=2048.0 --max-duration=20000.0 --prefix=background --channels='["H1", "L1"]' --condor-directory=/home/seiya.tsukamoto/aframe/layered/condor/fetch_train --data-dir=/home/seiya.tsukamoto/aframe/layered/data/train/background --segments-file=/home/seiya.tsukamoto/aframe/layered/data/train/segments.txt --local-scheduler=True --branch=40  --workers=1
+
+-- dependency tree
+print task dependencies with max_depth 2
+
+0 > FetchTrain(effective_workflow=htcondor, branch=40, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, start=1240579783.0, end=1241443783.0, ifos=["H1", "L1"], flag=DATA, min_duration=1024.0, sample_rate=2048.0, max_duration=20000.0, prefix=background, channels=["H1", "L1"], condor_directory=/home/seiya.tsukamoto/aframe/layered/condor/fetch_train, data_dir=/home/seiya.tsukamoto/aframe/layered/data/train/background, segments_file=/home/seiya.tsukamoto/aframe/layered/data/train/segments.txt)
+
+-- execute attempt 1
+24/07/2025 10:06:34.813730837 (PDT)
+INFO: luigi-interface - Informed scheduler that task   FetchTrain_ligo_dev_o4_cbc__seiya_tsukamoto_40_499f9c02d1   has status   PENDING
+INFO: Informed scheduler that task   FetchTrain_ligo_dev_o4_cbc__seiya_tsukamoto_40_499f9c02d1   has status   PENDING
+INFO: luigi-interface - Done scheduling tasks
+INFO: Done scheduling tasks
+INFO: luigi-interface - Running Worker with 1 processes
+INFO: Running Worker with 1 processes
+INFO: luigi-interface - [pid 81910] Worker Worker(salt=2993350335, workers=1, host=node023, username=seiya.tsukamoto, pid=81910) running   FetchTrain(effective_workflow=htcondor, branch=40, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, start=1240579783.0, end=1241443783.0, ifos=["H1", "L1"], flag=DATA, min_duration=1024.0, sample_rate=2048.0, max_duration=20000.0, prefix=background, channels=["H1", "L1"], condor_directory=/home/seiya.tsukamoto/aframe/layered/condor/fetch_train, data_dir=/home/seiya.tsukamoto/aframe/layered/data/train/background, segments_file=/home/seiya.tsukamoto/aframe/layered/data/train/segments.txt)
+INFO: [pid 81910] Worker Worker(salt=2993350335, workers=1, host=node023, username=seiya.tsukamoto, pid=81910) running   FetchTrain(effective_workflow=htcondor, branch=40, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, start=1240579783.0, end=1241443783.0, ifos=["H1", "L1"], flag=DATA, min_duration=1024.0, sample_rate=2048.0, max_duration=20000.0, prefix=background, channels=["H1", "L1"], condor_directory=/home/seiya.tsukamoto/aframe/layered/condor/fetch_train, data_dir=/home/seiya.tsukamoto/aframe/layered/data/train/background, segments_file=/home/seiya.tsukamoto/aframe/layered/data/train/segments.txt)
+
+=============================== entering sandbox ===============================
+task   : FetchTrain_ligo_dev_o4_cbc__seiya_tsukamoto_40_499f9c02d1
+sandbox: aframe_datagen::/home/seiya.tsukamoto/aframe/images/data.sif
+================================================================================
+
+INFO: luigi-interface - Done scheduling tasks
+INFO: Done scheduling tasks
+INFO: luigi-interface - Running Worker with 1 processes
+INFO: Running Worker with 1 processes
+INFO: luigi-interface - [pid 82097] Worker Worker(salt=2993350335, workers=1, host=node023, username=seiya.tsukamoto, pid=81910) running   FetchTrain(effective_workflow=htcondor, branch=40, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, start=1240579783.0, end=1241443783.0, ifos=["H1", "L1"], flag=DATA, min_duration=1024.0, sample_rate=2048.0, max_duration=20000.0, prefix=background, channels=["H1", "L1"], condor_directory=/home/seiya.tsukamoto/aframe/layered/condor/fetch_train, data_dir=/home/seiya.tsukamoto/aframe/layered/data/train/background, segments_file=/home/seiya.tsukamoto/aframe/layered/data/train/segments.txt)
+INFO: [pid 82097] Worker Worker(salt=2993350335, workers=1, host=node023, username=seiya.tsukamoto, pid=81910) running   FetchTrain(effective_workflow=htcondor, branch=40, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, start=1240579783.0, end=1241443783.0, ifos=["H1", "L1"], flag=DATA, min_duration=1024.0, sample_rate=2048.0, max_duration=20000.0, prefix=background, channels=["H1", "L1"], condor_directory=/home/seiya.tsukamoto/aframe/layered/condor/fetch_train, data_dir=/home/seiya.tsukamoto/aframe/layered/data/train/background, segments_file=/home/seiya.tsukamoto/aframe/layered/data/train/segments.txt)
+INFO: luigi-interface - [pid 82097] Worker Worker(salt=2993350335, workers=1, host=node023, username=seiya.tsukamoto, pid=81910) done      FetchTrain(effective_workflow=htcondor, branch=40, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, start=1240579783.0, end=1241443783.0, ifos=["H1", "L1"], flag=DATA, min_duration=1024.0, sample_rate=2048.0, max_duration=20000.0, prefix=background, channels=["H1", "L1"], condor_directory=/home/seiya.tsukamoto/aframe/layered/condor/fetch_train, data_dir=/home/seiya.tsukamoto/aframe/layered/data/train/background, segments_file=/home/seiya.tsukamoto/aframe/layered/data/train/segments.txt)
+INFO: [pid 82097] Worker Worker(salt=2993350335, workers=1, host=node023, username=seiya.tsukamoto, pid=81910) done      FetchTrain(effective_workflow=htcondor, branch=40, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, start=1240579783.0, end=1241443783.0, ifos=["H1", "L1"], flag=DATA, min_duration=1024.0, sample_rate=2048.0, max_duration=20000.0, prefix=background, channels=["H1", "L1"], condor_directory=/home/seiya.tsukamoto/aframe/layered/condor/fetch_train, data_dir=/home/seiya.tsukamoto/aframe/layered/data/train/background, segments_file=/home/seiya.tsukamoto/aframe/layered/data/train/segments.txt)
+INFO: luigi-interface - This progress looks :) because there were no failed tasks or missing dependencies
+INFO: This progress looks :) because there were no failed tasks or missing dependencies
+Fetched 2 URLs from gwosc.org for [1241393338 .. 1241397900))
+Reading data... [Done]
+Reading data... [Done]
+Fetched 2 URLs from gwosc.org for [1241393338 .. 1241397900))
+Reading data... [Done]
+Reading data... [Done]
+
+=============================== leaving sandbox ================================
+task   : FetchTrain_ligo_dev_o4_cbc__seiya_tsukamoto_40_499f9c02d1
+sandbox: aframe_datagen::/home/seiya.tsukamoto/aframe/images/data.sif
+================================================================================
+
+INFO: luigi-interface - [pid 81910] Worker Worker(salt=2993350335, workers=1, host=node023, username=seiya.tsukamoto, pid=81910) done      FetchTrain(effective_workflow=htcondor, branch=40, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, start=1240579783.0, end=1241443783.0, ifos=["H1", "L1"], flag=DATA, min_duration=1024.0, sample_rate=2048.0, max_duration=20000.0, prefix=background, channels=["H1", "L1"], condor_directory=/home/seiya.tsukamoto/aframe/layered/condor/fetch_train, data_dir=/home/seiya.tsukamoto/aframe/layered/data/train/background, segments_file=/home/seiya.tsukamoto/aframe/layered/data/train/segments.txt)
+INFO: [pid 81910] Worker Worker(salt=2993350335, workers=1, host=node023, username=seiya.tsukamoto, pid=81910) done      FetchTrain(effective_workflow=htcondor, branch=40, image=/home/seiya.tsukamoto/aframe/images/data.sif, job_log=, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=200MB, request_memory=16GB, request_cpus=1, start=1240579783.0, end=1241443783.0, ifos=["H1", "L1"], flag=DATA, min_duration=1024.0, sample_rate=2048.0, max_duration=20000.0, prefix=background, channels=["H1", "L1"], condor_directory=/home/seiya.tsukamoto/aframe/layered/condor/fetch_train, data_dir=/home/seiya.tsukamoto/aframe/layered/data/train/background, segments_file=/home/seiya.tsukamoto/aframe/layered/data/train/segments.txt)
+INFO: luigi-interface - Informed scheduler that task   FetchTrain_ligo_dev_o4_cbc__seiya_tsukamoto_40_499f9c02d1   has status   DONE
+INFO: Informed scheduler that task   FetchTrain_ligo_dev_o4_cbc__seiya_tsukamoto_40_499f9c02d1   has status   DONE
+INFO: luigi-interface - Worker Worker(salt=2993350335, workers=1, host=node023, username=seiya.tsukamoto, pid=81910) was stopped. Shutting down Keep-Alive thread
+INFO: Worker Worker(salt=2993350335, workers=1, host=node023, username=seiya.tsukamoto, pid=81910) was stopped. Shutting down Keep-Alive thread
+INFO: luigi-interface - 
+===== Luigi Execution Summary =====
+
+Scheduled 1 tasks of which:
+* 1 ran successfully:
+    - 1 FetchTrain(...)
+
+This progress looks :) because there were no failed tasks or missing dependencies
+
+===== Luigi Execution Summary =====
+
+INFO: 
+===== Luigi Execution Summary =====
+
+Scheduled 1 tasks of which:
+* 1 ran successfully:
+    - 1 FetchTrain(...)
+
+This progress looks :) because there were no failed tasks or missing dependencies
+
+===== Luigi Execution Summary =====
+
+task exit code: 0
+24/07/2025 10:07:03.976658295 (PDT)
+
+-- hook law_hook_job_finished ----------------------------------------------------------------------
+
+function 'law_hook_job_finished' does not exist, skip
+
+-- stageout ----------------------------------------------------------------------------------------
+
+-- stageout file
+stageout file empty, skip
+
+-- stageout command
+stageout command empty, skip
+
+-- cleanup -----------------------------------------------------------------------------------------
+
+-- files before cleanup
+> ls -a /var/lib/condor/execute/dir_81702/job_kUJAwnomlaaA ($LAW_JOB_HOME)
+total 4
+drwx------ 3 seiya.tsukamoto seiya.tsukamoto 1024 Jul 24 10:06 .
+drwx------ 6 seiya.tsukamoto seiya.tsukamoto 1024 Jul 24 10:06 ..
+lrwxrwxrwx 1 seiya.tsukamoto seiya.tsukamoto   64 Jul 24 10:06 htcondor_wrapper_22563d22c3.sh -> /var/lib/condor/execute/dir_81702/htcondor_wrapper_22563d22c3.sh
+drwxr-xr-x 3 seiya.tsukamoto seiya.tsukamoto 1024 Jul 24 10:07 tmp
+
+-- files after cleanup
+> ls -a /var/lib/condor/execute/dir_81702 ($LAW_JOB_INIT_DIR)
+total 172
+-rw-r--r--   1 seiya.tsukamoto seiya.tsukamoto  17885 Jul 24 10:07 ''
+drwx------   5 seiya.tsukamoto seiya.tsukamoto   1024 Jul 24 10:07 .
+drwxrwxrwt. 12 condor          condor            4096 Jul 24 10:06 ..
+-rwx------   1 seiya.tsukamoto seiya.tsukamoto     48 Jul 24 10:06 .chirp.config
+drwxr-xr-x   2 seiya.tsukamoto seiya.tsukamoto   1024 Jul 24 10:06 .condor_creds
+-rw-r--r--   1 seiya.tsukamoto seiya.tsukamoto   5816 Jul 24 10:06 .job.ad
+-rw-r--r--   1 seiya.tsukamoto seiya.tsukamoto   7005 Jul 24 10:06 .machine.ad
+-rwxr-xr-x   1 seiya.tsukamoto seiya.tsukamoto 113841 Jul 24 10:06 htcondor_wrapper_22563d22c3.sh
+-rwxrwxr-x   1 seiya.tsukamoto seiya.tsukamoto  20110 Jul 24 10:06 law_job_8a695babfb.sh
+drwx------   3 seiya.tsukamoto seiya.tsukamoto   1024 Jul 24 10:06 tmp
+drwx------   3 seiya.tsukamoto seiya.tsukamoto   1024 Jul 24 10:06 var
+
+-- end ---------------------------------------------------------------------------------------------
+
+start time    : 24/07/2025 10:06:30.609820190 (PDT)
+end time      : 24/07/2025 10:07:03.998803063 (PDT)
+job exit code : 0
+
+
+================================================================================
+=== End of law job
+================================================================================
+

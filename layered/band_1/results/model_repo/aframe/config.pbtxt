@@ -1,0 +1,19 @@
+name: "aframe"
+platform: "tensorrt_plan"
+input {
+  name: "whitened"
+  data_type: TYPE_FP32
+  dims: 128
+  dims: 2
+  dims: 4096
+}
+output {
+  name: "discriminator"
+  data_type: TYPE_FP32
+  dims: 128
+  dims: 1
+}
+instance_group {
+  count: 6
+  kind: KIND_GPU
+}

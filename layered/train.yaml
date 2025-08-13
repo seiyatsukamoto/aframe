@@ -10,8 +10,9 @@ model:
   init_args:
     # architecture
     arch:
-      class_path: architectures.supervised.SupervisedTimeDomainResNet
+      class_path: architectures.bandpass.Bandpass
       init_args:
+        classes: 64
         layers: [3, 4, 6, 3]
         norm_layer:
           class_path: ml4gw.nn.norm.GroupNorm1DGetter
@@ -28,23 +29,24 @@ model:
     learning_rate: 0.000585
     pct_lr_ramp: 0.115
 data:
-  class_path: train.data.supervised.TimeDomainSupervisedAframeDataset
+  class_path: train.data.supervised.ResampledAframeDataset
   init_args:
     # loading args
     # data_dir:
     # ifos:
 
     # preprocessing args
-    batch_size: 384
-    batches_per_epoch: 3700
+    batch_size: 512
+    batches_per_epoch: 2000
     num_files_per_batch: 10
     chunk_size: 10000
     chunks_per_epoch: 10
-    # kernel_length:
+    kernel_length: 4
     psd_length: 8
     # fduration:
-    # highpass: 
-    # lowpass: 
+    highpass: 32
+    lowpass: 64
+    resample_rate: 512
     fftlength: null
 
     # augmentation args
@@ -110,7 +112,7 @@ trainer:
   # strategy: set to ddp if len(devices) > 1
   #precision: 16-mixed
   accelerator: auto
-  max_epochs: 400
+  max_epochs: 25
   check_val_every_n_epoch: 1
   log_every_n_steps: 20
   benchmark: true
