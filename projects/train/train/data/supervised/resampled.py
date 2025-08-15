@@ -11,6 +11,7 @@ from train.metrics import get_timeslides
 from train.waveform_sampler import WaveformSampler
 from ml4gw.utils.slicing import unfold_windows
 import torch.nn.functional as F
+import numpy as np
 
 Tensor = torch.Tensor
 
@@ -175,7 +176,11 @@ class FFTAframeDataset(SupervisedAframeDataset):
         X, y, psds = super().augment(X, waveforms)
 
         X = self.whitener(X, psds)
-        
+
+        freqs = np.linspace(0, self.hparams.sample_rate/2, psds.shape[-1])
+        mask = freqs >= self.hparams.highpass
+        mask *= freqs <= self.hparams.lowpass
+        psds = psds[:, :, mask]
         asds = psds**0.5 * 1e23
         asds = asds.float()
 
