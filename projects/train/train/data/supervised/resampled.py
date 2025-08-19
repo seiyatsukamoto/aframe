@@ -12,6 +12,7 @@ from train.waveform_sampler import WaveformSampler
 from ml4gw.utils.slicing import unfold_windows
 import torch.nn.functional as F
 import numpy as np
+from ml4gw.transforms import SpectralDensity
 
 Tensor = torch.Tensor
 
@@ -94,44 +95,81 @@ class FFTAframeDataset(SupervisedAframeDataset):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
     
+    def build_transforms(self):
+        """
+        Helper utility in case we ever want to construct
+        this dataset on its own.
+        """
+        window_length = self.hparams.kernel_length + self.hparams.fduration
+        fftlength = self.hparams.fftlength or window_length
+        self.psd_estimator = PsdEstimator(
+            window_length,
+            self.hparams.sample_rate,
+            fftlength,
+            window=self.psd_window,
+            fast=self.hparams.highpass is not None,
+            average="median",
+        )
+        self.whitener = Whiten(
+            self.hparams.fduration,
+            self.hparams.sample_rate,
+            self.hparams.highpass,
+            self.hparams.lowpass,
+        )
+        self.projector = aug.WaveformProjector(
+            self.hparams.ifos,
+            self.hparams.sample_rate,
+            self.hparams.highpass,
+            self.hparams.lowpass,
+        )
+        self.psd_X = SpectralDensity(
+            self.hparams.sample_rate, 
+            fftlength/10, 
+            None, 
+            "median", 
+            window=self.psd_window, 
+            fast=self.hparams.highpass is not None
+        )
+    
     @torch.no_grad()
     def build_val_batches(self, background, signals):
         X_bg, X_inj, psds = super().build_val_batches(background, signals)
-        X_bg = self.whitener(X_bg, psds)
         # whiten each view of injections
         X_fg = []
         for inj in X_inj:
             inj = self.whitener(inj, psds)
-            inj_fft = torch.fft.rfft(inj, dim=-1)
             freqs = torch.fft.rfftfreq(
-                inj.shape[-1], 1 / self.hparams.sample_rate, device=self.device
+                inj.shape[-1], d=1 / self.hparams.sample_rate
             )
-            mask = freqs > self.hparams.highpass
-            mask *= freqs < self.hparams.lowpass
-            inj_fft = inj_fft[..., mask]
-            inj_fft = (2/inj.shape[-1])*inj_fft.abs()
-            X_fg.append(inj_fft)
+            inj = torch.fft.rfft(inj)
+            mask = freqs >= self.hparams.highpass
+            mask *= freqs <= self.hparams.lowpass
+            inj = inj[:, :, mask]
+            X_fg.append(inj)
 
         X_fg = torch.stack(X_fg)
-
-        X_bg_fft = torch.fft.rfft(X_bg, dim=-1)
+        
+        X_bg = self.whitener(X_bg, psds)
         freqs = torch.fft.rfftfreq(
-                X_bg.shape[-1], 1 / self.hparams.sample_rate, device=self.device
-            )
-        mask = freqs > self.hparams.highpass
-        mask *= freqs < self.hparams.lowpass
-        X_bg_fft = X_bg_fft[..., mask]
-        X_bg = (2/X_bg.shape[-1])*X_bg_fft.abs()
-
-        asds = psds**0.5 * 1e23
-        asds = asds.float()
-        num_freqs = X_fg.shape[-1]
-        if asds.shape[-1] != num_freqs:
-            asds = F.interpolate(asds, size=(num_freqs,), mode="linear", align_corners=False)
-        inv_asds = 1 / asds
-        X_bg = torch.cat([X_bg, inv_asds], dim=1).float()
-        inv_asds = inv_asds.unsqueeze(dim = 0).repeat(self.hparams.num_valid_views,1,1,1)
-        X_fg = torch.cat([X_fg, inv_asds], dim=2).float()
+                X_bg.shape[-1], d=1 / self.hparams.sample_rate
+        )
+        X_bg = torch.fft.rfft(X_bg)
+        mask = freqs >= self.hparams.highpass
+        mask *= freqs <= self.hparams.lowpass
+        X_bg = X_bg[..., mask]
+        
+        freqs = np.linspace(0, self.hparams.sample_rate/2, psds.shape[-1])
+        mask = freqs >= self.hparams.highpass
+        mask *= freqs <= self.hparams.lowpass
+        psds = psds[..., mask]
+        asds = (psds**0.5 * 1e23).float()
+        
+        if asds.shape[-1] != X_fg.shape[-1]:
+            asds = F.interpolate(asds, size=(X_fg.shape[-1],), mode="linear", align_corners=False)
+        
+        X_bg = torch.cat((abs(X_bg.real)**.5, abs(X_bg.imag)**.5, 1/asds), dim=1)
+        asds = asds.unsqueeze(dim = 0).repeat(self.hparams.num_valid_views,1,1,1)
+        X_fg = torch.cat((abs(X_fg.real)**.5, abs(X_fg.imag)**.5, 1/asds), dim=2)
         return X_bg, X_fg
 
     def on_after_batch_transfer(self, batch, _):
@@ -174,27 +212,22 @@ class FFTAframeDataset(SupervisedAframeDataset):
 
     def augment(self, X, waveforms):
         X, y, psds = super().augment(X, waveforms)
-
+        
         X = self.whitener(X, psds)
+        X_fft = torch.fft.rfft(X)
+        freqs = torch.fft.rfftfreq(
+            X.shape[-1], d=1 / self.hparams.sample_rate
+        )
+        mask = freqs >= self.hparams.highpass
+        mask *= freqs <= self.hparams.lowpass
+        X_fft = X_fft[:, :, mask]
 
         freqs = np.linspace(0, self.hparams.sample_rate/2, psds.shape[-1])
         mask = freqs >= self.hparams.highpass
         mask *= freqs <= self.hparams.lowpass
         psds = psds[:, :, mask]
-        asds = psds**0.5 * 1e23
-        asds = asds.float()
-
-        X_fft = torch.fft.rfft(X, dim=-1)
-        freqs = torch.fft.rfftfreq(
-            X.shape[-1], 1 / self.hparams.sample_rate, device=self.device
-        )
-        mask = freqs > self.hparams.highpass
-        mask *= freqs < self.hparams.lowpass
-        X_fft = X_fft[..., mask]
-        num_freqs = X_fft.shape[-1]
-        if asds.shape[-1] != num_freqs:
-            asds = F.interpolate(asds, size=(num_freqs,), mode="linear", align_corners=False)
-        inv_asds = 1 / asds
-        X_fft = (2/X.shape[-1])*X_fft.abs()
-        X_fft = torch.cat((X_fft, inv_asds), dim=1)
-        return X_fft, y
+        asds = (psds**0.5 * 1e23).float()
+        if asds.shape[-1] != X_fft.shape[-1]:
+            asds = F.interpolate(asds, size=(X_fft.shape[-1],), mode="linear", align_corners=False)
+            
+        return torch.cat((abs(X_fft.real)**.5, abs(X_fft.imag)**.5, 1/asds), dim=1), y

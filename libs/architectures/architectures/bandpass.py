@@ -52,7 +52,7 @@ class SupervisedFrequencyDomainResNetClasses(SupervisedArchitecture):
         norm_layer: Optional[NormLayer] = None,
     ) -> None:
         super().__init__()
-        self.resnet = ResNet1D(num_ifos * 2,
+        self.resnet = ResNet1D(num_ifos * 3,
                                layers=layers,
                                classes=classes,
                                kernel_size=kernel_size,
