@@ -3,9 +3,11 @@ from typing import Callable, Optional, Tuple
 import torch
 from ml4gw.transforms import SpectralDensity, Whiten
 from ml4gw.utils.slicing import unfold_windows
+import numpy as np
 
 Tensor = torch.Tensor
 
+import torch.nn.functional as F
 
 class BackgroundSnapshotter(torch.nn.Module):
     """Update a kernel with a new piece of streaming data"""
@@ -157,6 +159,96 @@ class BatchWhitener(torch.nn.Module):
         # the batch dimension after unfolding
         x = unfold_windows(whitened, self.kernel_size, self.stride_size)
         x = x.reshape(-1, num_channels, self.kernel_size)
+        if self.augmentor is not None:
+            x = self.augmentor(x)
+
+        if self.return_whitened:
+            return x, whitened
+        return x
+
+class FFTBatchWhitener(torch.nn.Module):
+    """Frequency Domain Version"""
+    def __init__(
+        self,
+        kernel_length: float,
+        sample_rate: float,
+        inference_sampling_rate: float,
+        batch_size: int,
+        fduration: float,
+        fftlength: float,
+        augmentor: Optional[Callable] = None,
+        highpass: Optional[float] = None,
+        lowpass: Optional[float] = None,
+        return_whitened: bool = False,
+    ) -> None:
+        super().__init__()
+        self.stride_size = int(sample_rate / inference_sampling_rate)
+        self.kernel_size = int(kernel_length * sample_rate)
+        self.sample_rate = sample_rate
+        self.highpass = highpass
+        self.lowpass = lowpass
+        self.augmentor = augmentor
+        self.return_whitened = return_whitened
+        self.batch_size = batch_size
+
+        # do foreground length calculation in units of samples,
+        # then convert back to length to guard for intification
+        strides = (batch_size - 1) * self.stride_size
+        fsize = int(fduration * sample_rate)
+        size = strides + self.kernel_size + fsize
+        length = size / sample_rate
+        self.psd_estimator = PsdEstimator(
+            length,
+            sample_rate,
+            fftlength=fftlength,
+            overlap=None,
+            average="median",
+            fast=highpass is not None,
+        )
+        self.whitener = Whiten(fduration, sample_rate, highpass, lowpass)
+
+    def forward(self, x: Tensor) -> Tensor:
+        # Get the number of channels so we know how to
+        # reshape `x` appropriately after unfolding to
+        # ensure we have (batch, channels, time) shape
+        if x.ndim == 3:
+            num_channels = x.size(1)
+        elif x.ndim == 2:
+            num_channels = x.size(0)
+        else:
+            raise ValueError(
+                "Expected input to be either 2 or 3 dimensional, "
+                "but found shape {}".format(x.shape)
+            )
+
+        x, psd = self.psd_estimator(x)
+        whitened = self.whitener(x.double(), psd)
+
+        # unfold x and then put it into the expected shape.
+        # Note that if x has both signal and background
+        # batch elements, they will be interleaved along
+        # the batch dimension after unfolding
+        x = unfold_windows(whitened, self.kernel_size, self.stride_size)
+        x = x.reshape(-1, num_channels, self.kernel_size)
+        psd = psd.unsqueeze(0).repeat(self.batch_size, 1, 1)
+        
+        freqs = torch.fft.rfftfreq(
+            x.shape[-1], d=1/self.sample_rate
+        )
+        mask = freqs >= self.highpass
+        mask *= freqs <= self.lowpass
+        x = torch.fft.rfft(x)
+        x = x[:, :, mask]
+        
+        freqs = np.linspace(0, self.sample_rate/2, psd.shape[-1])
+        mask = freqs >= self.highpass
+        mask *= freqs <= self.lowpass
+        psd = psd[:, :, mask]
+        asd = (psd**0.5 * 1e23).float()
+        if asd.shape[-1] != x.shape[-1]:
+            asd = F.interpolate(asd, size=(x.shape[-1],), mode="linear", align_corners=False)
+        
+        x = torch.cat((x.real, x.imag, 1/asd), dim=1)
         if self.augmentor is not None:
             x = self.augmentor(x)
 

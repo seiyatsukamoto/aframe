@@ -141,7 +141,8 @@ def export(
         batch_file = h5py.File(io.BytesIO(f.read()))
         size = batch_file["X"].shape[2:]
 
-    input_shape = (batch_size, num_ifos) + tuple(size)
+    input_shape = batch_file['X'].shape
+    input_shape = (batch_size, input_shape[1], input_shape[2])
     # the network will have some different keyword
     # arguments required for export depending on
     # the target inference platform

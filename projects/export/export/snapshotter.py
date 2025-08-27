@@ -4,7 +4,7 @@ from hermes.quiver import Platform
 from hermes.quiver.streaming import utils as streaming_utils
 from ml4gw.transforms import SingleQTransform
 
-from utils.preprocessing import BackgroundSnapshotter, BatchWhitener
+from utils.preprocessing import BackgroundSnapshotter, BatchWhitener, FFTBatchWhitener
 
 if TYPE_CHECKING:
     from hermes.quiver.model import EnsembleModel, ExposedTensor
@@ -40,6 +40,12 @@ def add_streaming_input_preprocessor(
     """Create a snapshotter model and add it to the repository"""
 
     batch_size, num_ifos, *kernel_size = input.shape
+    if num_ifos == 6:
+        num_ifos = 2
+        domain = 'freq'
+    else:
+        domain = 'time'
+    
     if q is not None:
         if len(kernel_size) != 2:
             raise ValueError(
@@ -78,17 +84,30 @@ def add_streaming_input_preprocessor(
         streams_per_gpu=streams_per_gpu,
     )
     ensemble.add_input(streaming_model.inputs["stream"])
-    preprocessor = BatchWhitener(
-        kernel_length=kernel_length,
-        sample_rate=sample_rate,
-        batch_size=batch_size,
-        inference_sampling_rate=inference_sampling_rate,
-        fduration=fduration,
-        fftlength=fftlength,
-        highpass=highpass,
-        lowpass=lowpass,
-        augmentor=augmentor,
-    )
+    if domain == 'time':
+        preprocessor = BatchWhitener(
+            kernel_length=kernel_length,
+            sample_rate=sample_rate,
+            batch_size=batch_size,
+            inference_sampling_rate=inference_sampling_rate,
+            fduration=fduration,
+            fftlength=fftlength,
+            highpass=highpass,
+            lowpass=lowpass,
+            augmentor=augmentor,
+        )
+    elif domain == 'freq':
+        preprocessor = FFTBatchWhitener(
+            kernel_length=kernel_length,
+            sample_rate=sample_rate,
+            batch_size=batch_size,
+            inference_sampling_rate=inference_sampling_rate,
+            fduration=fduration,
+            fftlength=fftlength,
+            highpass=highpass,
+            lowpass=lowpass,
+            augmentor=augmentor,
+        )
     preproc_model = ensemble.repository.add(
         "preprocessor", platform=Platform.TORCHSCRIPT
     )

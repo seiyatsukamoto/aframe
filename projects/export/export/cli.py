@@ -5,6 +5,7 @@ import jsonargparse
 from export.main import export
 from utils.logging import configure_logging
 
+import logging
 
 def build_parser():
     parser = jsonargparse.ArgumentParser()
@@ -24,6 +25,11 @@ def main(args=None):
     verbose = args.pop("verbose")
     configure_logging(logfile, verbose)
     args = args.as_dict()
+    logging.info(args['weights'])
+    logging.info(args['repository_directory'])
+    logging.info(args['clean'])
+    logging.info(args['aframe_instances'])
+    logging.info(args['batch_file'])
     export(**args)
 
 

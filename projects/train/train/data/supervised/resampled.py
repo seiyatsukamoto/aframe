@@ -122,14 +122,6 @@ class FFTAframeDataset(SupervisedAframeDataset):
             self.hparams.highpass,
             self.hparams.lowpass,
         )
-        self.psd_X = SpectralDensity(
-            self.hparams.sample_rate, 
-            fftlength/10, 
-            None, 
-            "median", 
-            window=self.psd_window, 
-            fast=self.hparams.highpass is not None
-        )
     
     @torch.no_grad()
     def build_val_batches(self, background, signals):
@@ -167,9 +159,9 @@ class FFTAframeDataset(SupervisedAframeDataset):
         if asds.shape[-1] != X_fg.shape[-1]:
             asds = F.interpolate(asds, size=(X_fg.shape[-1],), mode="linear", align_corners=False)
         
-        X_bg = torch.cat((abs(X_bg.real)**.5, abs(X_bg.imag)**.5, 1/asds), dim=1)
+        X_bg = torch.cat((X_bg.real, X_bg.imag, 1/asds), dim=1)
         asds = asds.unsqueeze(dim = 0).repeat(self.hparams.num_valid_views,1,1,1)
-        X_fg = torch.cat((abs(X_fg.real)**.5, abs(X_fg.imag)**.5, 1/asds), dim=2)
+        X_fg = torch.cat((X_fg.real, X_fg.imag, 1/asds), dim=2)
         return X_bg, X_fg
 
     def on_after_batch_transfer(self, batch, _):
@@ -202,14 +194,6 @@ class FFTAframeDataset(SupervisedAframeDataset):
             batch = (shift, X_bg, X_fg)
         return batch
 
-    def transforms_to_device(self):
-        """
-        Move all `torch.nn.Modules` to the local device
-        """
-        for item in self.__dict__.values():
-            if isinstance(item, torch.nn.Module):
-                item.to(self.device)
-
     def augment(self, X, waveforms):
         X, y, psds = super().augment(X, waveforms)
         
@@ -230,4 +214,4 @@ class FFTAframeDataset(SupervisedAframeDataset):
         if asds.shape[-1] != X_fft.shape[-1]:
             asds = F.interpolate(asds, size=(X_fft.shape[-1],), mode="linear", align_corners=False)
             
-        return torch.cat((abs(X_fft.real)**.5, abs(X_fft.imag)**.5, 1/asds), dim=1), y
+        return torch.cat((X_fft.real, X_fft.imag, 1/asds), dim=1), y
