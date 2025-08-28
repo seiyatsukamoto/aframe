@@ -5,7 +5,7 @@ input {
   data_type: TYPE_FP32
   dims: 2
   dims: 2
-  dims: 65536
+  dims: 262144
 }
 output {
   name: "discriminator"

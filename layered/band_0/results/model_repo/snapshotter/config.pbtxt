@@ -5,14 +5,14 @@ input {
   data_type: TYPE_FP32
   dims: 2
   dims: 2
-  dims: 65536
+  dims: 262144
 }
 output {
   name: "strain"
   data_type: TYPE_FP32
   dims: 2
   dims: 2
-  dims: 206336
+  dims: 401408
 }
 instance_group {
   count: 6
@@ -28,12 +28,12 @@ sequence_batching {
     data_type: TYPE_FP32
     dims: 2
     dims: 2
-    dims: 140800
+    dims: 139264
     initial_state {
       data_type: TYPE_FP32
       dims: 2
       dims: 2
-      dims: 140800
+      dims: 139264
       zero_data: true
       name: "snapshot"
     }

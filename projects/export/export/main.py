@@ -41,6 +41,7 @@ def export(
     aframe_instances: Optional[int] = None,
     preproc_instances: Optional[int] = None,
     platform: qv.Platform = qv.Platform.TENSORRT,
+    resample_rate: Optional[float] = None,
     clean: bool = False,
     verbose: bool = False,
     **kwargs,
@@ -142,7 +143,10 @@ def export(
         size = batch_file["X"].shape[2:]
 
     input_shape = batch_file['X'].shape
-    input_shape = (batch_size, input_shape[1], input_shape[2])
+    if resample_rate and (resample_rate != sample_rate):
+        input_shape = (batch_size, input_shape[1], int(input_shape[2]*(resample_rate/sample_rate)))
+    else:
+        input_shape = (batch_size, input_shape[1], input_shape[2])
     # the network will have some different keyword
     # arguments required for export depending on
     # the target inference platform
@@ -191,6 +195,7 @@ def export(
             lowpass=lowpass,
             preproc_instances=preproc_instances,
             streams_per_gpu=streams_per_gpu,
+            resample_rate=resample_rate,
         )
         ensemble.pipe(whitened, aframe.inputs["whitened"])
 

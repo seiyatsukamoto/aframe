@@ -5,14 +5,14 @@ input {
   data_type: TYPE_FP32
   dims: 2
   dims: 2
-  dims: 206336
+  dims: 401408
 }
 output {
   name: "whitened"
   data_type: TYPE_FP32
   dims: 128
   dims: 2
-  dims: 8192
+  dims: 2048
 }
 instance_group {
   count: 1

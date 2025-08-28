@@ -4,7 +4,7 @@ from hermes.quiver import Platform
 from hermes.quiver.streaming import utils as streaming_utils
 from ml4gw.transforms import SingleQTransform
 
-from utils.preprocessing import BackgroundSnapshotter, BatchWhitener, FFTBatchWhitener
+from utils.preprocessing import BackgroundSnapshotter, BatchWhitener, FFTBatchWhitener, ResampledBatchWhitener
 
 if TYPE_CHECKING:
     from hermes.quiver.model import EnsembleModel, ExposedTensor
@@ -36,6 +36,7 @@ def add_streaming_input_preprocessor(
     lowpass: Optional[float] = None,
     preproc_instances: Optional[int] = None,
     streams_per_gpu: int = 1,
+    resample_rate: Optional[float] = None,
 ) -> "ExposedTensor":
     """Create a snapshotter model and add it to the repository"""
 
@@ -85,17 +86,31 @@ def add_streaming_input_preprocessor(
     )
     ensemble.add_input(streaming_model.inputs["stream"])
     if domain == 'time':
-        preprocessor = BatchWhitener(
-            kernel_length=kernel_length,
-            sample_rate=sample_rate,
-            batch_size=batch_size,
-            inference_sampling_rate=inference_sampling_rate,
-            fduration=fduration,
-            fftlength=fftlength,
-            highpass=highpass,
-            lowpass=lowpass,
-            augmentor=augmentor,
-        )
+        if resample_rate and (resample_rate != sample_rate):
+            preprocessor = ResampledBatchWhitener(
+                resample_rate=resample_rate,
+                kernel_length=kernel_length,
+                sample_rate=sample_rate,
+                batch_size=batch_size,
+                inference_sampling_rate=inference_sampling_rate,
+                fduration=fduration,
+                fftlength=fftlength,
+                highpass=highpass,
+                lowpass=lowpass,
+                augmentor=augmentor,
+            )
+        else:
+            preprocessor = BatchWhitener(
+                kernel_length=kernel_length,
+                sample_rate=sample_rate,
+                batch_size=batch_size,
+                inference_sampling_rate=inference_sampling_rate,
+                fduration=fduration,
+                fftlength=fftlength,
+                highpass=highpass,
+                lowpass=lowpass,
+                augmentor=augmentor,
+            )
     elif domain == 'freq':
         preprocessor = FFTBatchWhitener(
             kernel_length=kernel_length,
