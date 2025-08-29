@@ -26,6 +26,7 @@ class ExportParams(law.Task):
     lowpass = luigi.OptionalFloatParameter(default="")
     q = luigi.OptionalFloatParameter(default="")
     fftlength = luigi.OptionalFloatParameter(default="")
+    resample_rate = luigi.OptionalFloatParameter(default="")
     ifos = luigi.ListParameter()
     repository_directory = PathParameter(
         default=paths().results_dir / "model_repo"
@@ -90,5 +91,6 @@ class ExportLocal(AframeSingularityTask):
             self.aframe_instances,
             self.preproc_instances,
             platform,
+            resample_rate,
             clean=self.clean,
         )
