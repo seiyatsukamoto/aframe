@@ -10,7 +10,7 @@ model:
   init_args:
     # architecture
     arch:
-      class_path: architectures.bandpass.Bandpass
+      class_path: architectures.bandpass.Bandpassbreak
       init_args:
         classes: 64
         layers: [3, 4, 6, 3]

@@ -91,6 +91,6 @@ class ExportLocal(AframeSingularityTask):
             self.aframe_instances,
             self.preproc_instances,
             platform,
-            resample_rate,
+            self.resample_rate,
             clean=self.clean,
         )
