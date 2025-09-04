@@ -98,6 +98,7 @@ class ResampledAframeDataset_v3(SupervisedAframeDataset):
         # now define some of the augmentation transforms
         # that require sample rate information
         self._logger.info("Constructing sample rate dependent transforms")
+        self._logger.info(f"sample rate {self.hparams.sample_rate}")
         self.build_transforms()
         self.transforms_to_device()
 
@@ -106,27 +107,27 @@ class ResampledAframeDataset_v3(SupervisedAframeDataset):
         # if we're doing distributed training so we'll know
         # which waveforms to subsample
 
-        val_background = self.load_val_background(self.valid_fnames)
-        self._logger.info(
-            "Constructing validation timeslides from background segments "
-            f"{' '.join(self.valid_fnames)}"
-        )
-        self.timeslides, self.valid_loader_length = get_timeslides(
-            val_background,
-            self.hparams.valid_livetime,
-            self.hparams.sample_rate,
-            self.sample_length,
-            self.hparams.valid_stride,
-            self.val_batch_size,
-        )
+        #val_background = self.load_val_background(self.valid_fnames)
+        #self._logger.info(
+        #    "Constructing validation timeslides from background segments "
+        #    f"{' '.join(self.valid_fnames)}"
+        #)
+        #self.timeslides, self.valid_loader_length = get_timeslides(
+        #    val_background,
+        #    self.hparams.valid_livetime,
+        #    self.hparams.sample_rate,
+        #    self.sample_length,
+        #    self.hparams.valid_stride,
+        #    self.val_batch_size,
+        #)
 
         self.waveform_sampler = WaveformSampler()
 
-        val_waveform_file = os.path.join(self.data_dir, "val_waveforms.hdf5")
-        self.val_waveforms = self.load_val_waveforms(
-            val_waveform_file, world_size, rank
-        )
-        self._logger.info("Initial dataloading complete")
+        #val_waveform_file = os.path.join(self.data_dir, "val_waveforms.hdf5")
+        #self.val_waveforms = self.load_val_waveforms(
+        #    val_waveform_file, world_size, rank
+        #)
+        #self._logger.info("Initial dataloading complete")
     
     def train_dataloader(self) -> torch.utils.data.DataLoader:
         # divide batches per epoch up among all devices

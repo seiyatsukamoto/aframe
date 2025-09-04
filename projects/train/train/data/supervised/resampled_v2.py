@@ -13,6 +13,7 @@ from ml4gw.utils.slicing import sample_kernels
 
 from train.data.supervised.supervised import SupervisedAframeDataset
 from train.data.resampled_hdf5_dataset import ResampledHdf5TimeSeriesDataset
+from torchaudio.transforms import Resample
 
 from ledger.injections import WaveformSet, waveform_class_factory
 from train import augmentations as aug
@@ -49,13 +50,12 @@ class ZippedDataset(torch.utils.data.IterableDataset):
 class ResampledAframeDataset_v2(SupervisedAframeDataset):
     def __init__(
         self,
-        resampler: Callable[[Tensor], Tensor], 
         file_sample_rate: float,
         *args, 
         **kwargs
     ) -> None:
         super().__init__(*args, **kwargs)
-        self.resampler = resampler
+        self.resampler = Resample(file_sample_rate, self.hparams.sample_rate)
         self.file_sample_rate = file_sample_rate
         self.save_hyperparameters(ignore=['resampler'])
     

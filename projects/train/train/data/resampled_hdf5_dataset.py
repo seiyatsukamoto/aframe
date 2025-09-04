@@ -12,8 +12,6 @@ Tensor = torch.Tensor
 class ContiguousHdf5Warning(Warning):
     pass
 
-import time
-
 class ResampledHdf5TimeSeriesDataset(torch.utils.data.IterableDataset):
     """
     Iterable dataset that samples and loads windows of
@@ -67,7 +65,7 @@ class ResampledHdf5TimeSeriesDataset(torch.utils.data.IterableDataset):
         batches_per_epoch: int,
         coincident: Union[bool, str],
         num_files_per_batch: Optional[int] = None,
-        resampler: Callable[[Tensor], Tensor] = None,
+        resampler = None,
     ) -> None:
         if not isinstance(coincident, bool) and coincident != "files":
             raise ValueError(
@@ -191,10 +189,7 @@ class ResampledHdf5TimeSeriesDataset(torch.utils.data.IterableDataset):
             with h5py.File(fname, "r") as f:
                 for b, c, i in zip(batch_indices, channel_indices, idx):
                     x[b, c] = f[self.channels[c]][i : i + self.kernel_size]
-        start_time = time.time()
         x = self.resampler(torch.Tensor(x))
-        end_time = time.time()
-        print(end_time - start_time)
         return x
 
     def __iter__(self) -> WaveformTensor:
