@@ -136,7 +136,12 @@ def postprocess_samples(
 
     # build bilby posterior object for
     # parameters we want to keep
-    posterior_params = ["chirp_mass", "mass_ratio", "luminosity_distance"]
+    posterior_params = [
+        "chirp_mass",
+        "mass_ratio",
+        "luminosity_distance",
+        "inclination",
+    ]
 
     posterior = {}
     for param in posterior_params:
@@ -157,6 +162,9 @@ def postprocess_samples(
     )
     posterior["mass_1"] = mass_1
     posterior["mass_2"] = mass_2
+    # add time column so ligo-skymap-from-samples
+    # can add the gpstime metadata attribute
+    posterior["time"] = np.ones_like(mass_1) * event_time
     posterior = pd.DataFrame(posterior)
 
     result = AmplfiResult(

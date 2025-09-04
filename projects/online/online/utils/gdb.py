@@ -8,14 +8,17 @@ import h5py
 from gwpy.time import tconvert
 from ligo.gracedb.rest import GraceDb as _GraceDb
 from ligo.em_bright import em_bright
-from ..subprocesses.utils import run_subprocess_with_logging
 from ligo.skymap.tool.ligo_skymap_plot import main as ligo_skymap_plot
+from ligo.skymap.io.fits import write_sky_map
 from online.utils.searcher import Event
 import matplotlib.pyplot as plt
+from ligo.skymap.tool.ligo_skymap_from_samples import (
+    main as ligo_skymap_from_samples,
+)
 
 if TYPE_CHECKING:
     from astropy.io.fits import BinTableHDU
-
+    from amplfi.utils.result import AmplfiResult
 from enum import Enum
 
 
@@ -146,16 +149,41 @@ class GraceDb(_GraceDb):
 
         return graceid
 
+    def update_event(self, event: Event, graceid: str, result: "AmplfiResult"):
+        """
+        Update an event with posterior source properties from amplfi
+        """
+        self.logger.info(f"Updating event {graceid} with source properties")
+        event_dir = self.write_dir / event.event_dir
+        event_file = event_dir / event.filename
+        with open(event_file) as f:
+            event_json = json.load(f)
+
+        event_json["mchirp"] = float(result.posterior["chirp_mass"].median())
+        event_json["mass1"] = float(result.posterior["mass_1"].median())
+        event_json["mass2"] = float(result.posterior["mass_2"].median())
+        event_json["mtotal"] = float(
+            (result.posterior["mass_1"] + result.posterior["mass_2"]).median()
+        )
+        event_json["spin1z"] = 0
+        event_json["spin2z"] = 0
+        # TODO: esimate from posterior
+        event_json["template_duration"] = 1.5
+        with open(event_file, "w") as f:
+            json.dump(event_json, f)
+
+        self.replace_event(graceid, str(event_file))
+
     def submit_low_latency_pe(
         self,
         result: bilby.core.result.Result,
         skymap: "BinTableHDU",
         graceid: str,
-        event_dir: Path,
+        event: Event,
     ):
-        event_dir = self.write_dir / event_dir
+        event_dir = self.write_dir / event.event_dir
         skymap_fname = event_dir / "amplfi.multiorder.fits"
-        skymap.writeto(skymap_fname)
+        write_sky_map(skymap_fname, skymap)
 
         self.logger.debug("Submitting skymap to GraceDB")
         self.write_log(
@@ -193,6 +221,9 @@ class GraceDb(_GraceDb):
                 graceid, "posterior", filename=filename, tag_name="pe"
             )
 
+        # update event with source parameters
+        self.update_event(event, graceid, result)
+
         corner_fname = event_dir / "corner_plot.png"
         result.plot_corner(
             parameters=[
@@ -222,13 +253,7 @@ class GraceDb(_GraceDb):
         filename = event_dir / "posterior_samples.dat"
         result.save_posterior_samples(filename=filename)
 
-        # TODO: we probably will need cores beyond whats on the head node
-        # to really speed this up, and also the following env variables
-        # need to be set to take advantage of thread parallelism:
-        # {"MKL_NUM_THREADS": "1", "OMP_NUM_THREADS": "1"}.
-        # we might need to submit this via condor
         args = [
-            "ligo-skymap-from-samples",
             str(filename),
             "-j",
             str(64),
@@ -243,16 +268,7 @@ class GraceDb(_GraceDb):
 
         args.extend(ifos)
 
-        # TODO: ligo-skymap-from-samples doesnt clean up
-        # process pool on purpose so that overhead from
-        # initializing pool can be eliminated. Once
-        # we get our own resources we should take
-        # advantage of this
-
-        # run subprocess, passing any output to python logger
-        result = run_subprocess_with_logging(
-            args, logger=self.logger, log_stderr_on_success=True
-        )
+        ligo_skymap_from_samples(args)
 
         self.write_log(
             graceid,

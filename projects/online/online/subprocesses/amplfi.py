@@ -5,10 +5,10 @@ from amplfi.train.prior import AmplfiPrior
 from torch.multiprocessing import Array, Queue
 from online.utils.searcher import Event
 from online.utils.pe import postprocess_samples
-from astropy import io
 from .utils import subprocess_wrapper
 from online.utils.email_alerts import send_detection_email
 from astropy.time import Time
+from ligo.skymap.io.fits import gps_to_iso8601
 
 if TYPE_CHECKING:
     from online.utils.gdb import GraceDb
@@ -53,17 +53,27 @@ def amplfi_subprocess(
 
             logger.info("Creating low resolution skymap")
             skymap = result.to_skymap(
-                nside,
-                min_samples_per_pix,
                 use_distance=use_distance,
+                adaptive=True,
+                min_samples_per_pix_dist=min_samples_per_pix,
                 metadata={
                     "INSTRUME": ",".join(amplfi_ifos),
                     "DATE": Time.now().utc.isot,
+                    "DATE-OBS": gps_to_iso8601(event.gpstime),
                 },
             )
-            fits_skymap = io.fits.table_to_hdu(skymap)
 
             graceid = amplfi_queue.get()
+
+            logger.info(
+                f"Submitting posterior and low resolution skymap for {graceid}"
+            )
+            gdb.submit_low_latency_pe(
+                result,
+                skymap,
+                graceid,
+                event,
+            )
 
             if emails is not None and event.far < email_far_threshold:
                 logger.info(f"Sending detection email for {graceid}")
@@ -74,16 +84,6 @@ def amplfi_subprocess(
                     graceid,
                     gdb.server.gevent_url(graceid),
                 )
-
-            logger.info(
-                f"Submitting posterior and low resolution skymap for {graceid}"
-            )
-            gdb.submit_low_latency_pe(
-                result,
-                fits_skymap,
-                graceid,
-                event.event_dir,
-            )
 
             logger.info(f"Launching ligo-skymap-from-samples for {graceid}")
             gdb.submit_ligo_skymap_from_samples(
@@ -112,6 +112,26 @@ def amplfi_subprocess(
                 amplfi_parameter_sampler,
             )
 
+            logger.info("Creating low resolution skymap")
+            skymap = result.to_skymap(
+                use_distance=use_distance,
+                adaptive=True,
+                min_samples_per_pix_dist=min_samples_per_pix,
+                metadata={
+                    "INSTRUME": ",".join(amplfi_ifos),
+                    "DATE": Time.now().utc.isot,
+                    "DATE-OBS": gps_to_iso8601(event.gpstime),
+                },
+            )
+
+            logger.info("Submitting posterior and low resolution skymap")
+            gdb.submit_low_latency_pe(
+                result,
+                skymap,
+                graceid,
+                event,
+            )
+
             if emails is not None and event.far < email_far_threshold:
                 logger.info("Sending detection email")
                 send_detection_email(
@@ -121,26 +141,6 @@ def amplfi_subprocess(
                     graceid,
                     gdb.server.gevent_url(graceid),
                 )
-
-            logger.info("Creating low resolution skymap")
-            skymap = result.to_skymap(
-                nside,
-                min_samples_per_pix,
-                use_distance=use_distance,
-                metadata={
-                    "INSTRUME": ",".join(amplfi_ifos),
-                    "DATE": Time.now().utc.isot,
-                },
-            )
-            fits_skymap = io.fits.table_to_hdu(skymap)
-
-            logger.info("Submitting posterior and low resolution skymap")
-            gdb.submit_low_latency_pe(
-                result,
-                fits_skymap,
-                graceid,
-                event.event_dir,
-            )
 
             logger.info(f"Launching ligo-skymap-from-samples for {graceid}")
             gdb.submit_ligo_skymap_from_samples(
