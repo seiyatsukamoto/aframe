@@ -150,7 +150,6 @@ class AframeBase(pl.LightningModule):
 
     def validation_step(self, batch, _) -> None:
         shift, X_bg, X_inj = batch
-
         y_bg = self.score(X_bg)
 
         # compute predictions over multiple views of

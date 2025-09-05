@@ -1,1 +1,0 @@
-{"_step":1299,"train_loss_epoch":0.429605096578598,"_runtime":12072.247223499,"epoch":24,"valid_auroc_epoch":0.5168724656105042,"_wandb":{"runtime":12118},"_timestamp":1.754953192807309e+09,"trainer/global_step":24999,"train_loss_step":0.38575026392936707}
