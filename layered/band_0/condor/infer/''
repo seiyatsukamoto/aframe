@@ -1,237 +1,0 @@
----
-running htcondor_wrapper_92f95fd2e6_1040.sh for job number 1
-render law_job_0e5c1d7d9a.sh
-
-================================================================================
-=== Start of law job
-================================================================================
-
-law remote job script
-=====================
-29/08/2025 07:47:30.807657522 (CDT)
-
--- environment -------------------------------------------------------------------------------------
-
--- host infos
-> uname -a
-Linux node554.ldas.ligo-la.caltech.edu 4.18.0-553.40.1.el8_10.x86_64 #1 SMP Thu Feb 13 13:28:49 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
-
-> lsb_release -a
-LSB Version:	:core-4.1-amd64:core-4.1-noarch:cxx-4.1-amd64:cxx-4.1-noarch:desktop-4.1-amd64:desktop-4.1-noarch:languages-4.1-amd64:languages-4.1-noarch
-Distributor ID:	Rocky
-Description:	Rocky Linux release 8.10 (Green Obsidian)
-Release:	8.10
-Codename:	GreenObsidian
-
-> hostnamectl status
-   Static hostname: node554.ldas.ligo-la.caltech.edu
-         Icon name: computer-server
-           Chassis: server
-        Machine ID: 778bf04e60b546848640dfd7490be7ab
-           Boot ID: 637aa4c746cd4664a8c89ae24605660b
-  Operating System: Rocky Linux 8.10 (Green Obsidian)
-       CPE OS Name: cpe:/o:rocky:rocky:8:GA
-            Kernel: Linux 4.18.0-553.40.1.el8_10.x86_64
-      Architecture: x86-64
-
--- job infos
-shell    : /bin/bash
-hostname : node554.ldas.ligo-la.caltech.edu
-python   : Python 3.10.18 from /home/seiya.tsukamoto/aframe/.venv/bin/python
-python3  : Python 3.10.18 from /home/seiya.tsukamoto/aframe/.venv/bin/python3
-init dir : /var/lib/condor/execute/dir_1367386
-job home : /var/lib/condor/execute/dir_1367386/job_qpHqp3uMdwF3
-tmp dir  : /var/lib/condor/execute/dir_1367386/job_qpHqp3uMdwF3/tmp
-user home: /home/seiya.tsukamoto
-pwd      : /var/lib/condor/execute/dir_1367386
-script   : law_job_0e5c1d7d9a.sh
-args     : aframe.tasks.infer.infer DeployInferLocal LS1sb2ctZmlsZT1OT19TVFIgLS1jbGVhci1sb2dzPUZhbHNlIC0tZGV2PVRydWUgLS1ncHVzPTAsMSAtLWltYWdlPS9ob21lL3NlaXlhLnRzdWthbW90by9hZnJhbWUvaW1hZ2VzL2luZmVyLnNpZiAtLWNvbnRhaW5lci1yb290PS9ob21lL3NlaXlhLnRzdWthbW90by9hZnJhbWUvaW1hZ2VzLyAtLWFjY291bnRpbmctZ3JvdXAtdXNlcj1zZWl5YS50c3VrYW1vdG8gLS1hY2NvdW50aW5nLWdyb3VwPWxpZ28uZGV2Lm80LmNiYy5hbGxza3kuYWZyYW1lIC0tcmVxdWVzdC1kaXNrPTFHIC0tcmVxdWVzdC1tZW1vcnk9NkcgLS1yZXF1ZXN0LWNwdXM9MSAtLWlmb3M9J1siSDEiLCAiTDEiXScgLS1pbmZlcmVuY2Utc2FtcGxpbmctcmF0ZT0xLjAgLS1iYXRjaC1zaXplPTEyOCAtLXBzZC1sZW5ndGg9NjQuMCAtLWNsdXN0ZXItd2luZG93LWxlbmd0aD0zMi4wIC0taW50ZWdyYXRpb24td2luZG93LWxlbmd0aD02LjAgLS1mZHVyYXRpb249MS4wIC0tVGI9MzE1MzYwMDAuMCAtLXNoaWZ0cz0nWzAsIDFdJyAtLXNlcXVlbmNlLWlkPTEwMDEgLS1tb2RlbC1uYW1lPWFmcmFtZS1zdHJlYW0gLS1tb2RlbC12ZXJzaW9uPS0xIC0tc3RyZWFtcy1wZXItZ3B1PTYgLS1yYXRlLXBlci1ncHU9NzAuMCAtLXplcm8tbGFnPVRydWUgLS1yZXR1cm4tdGltZXNlcmllcz1GYWxzZSAtLW91dHB1dC1kaXI9L2hvbWUvc2VpeWEudHN1a2Ftb3RvL2FmcmFtZS9sYXllcmVkL2JhbmRfMC9yZXN1bHRzIC0tdHJhaW4tdGFzaz1UcmFpbiAtLWNvbmRvci1kaXJlY3Rvcnk9L2hvbWUvc2VpeWEudHN1a2Ftb3RvL2FmcmFtZS9sYXllcmVkL2JhbmRfMC9jb25kb3IvaW5mZXIgLS10cml0b24taW1hZ2U9aGVybWVzL3RyaXRvbnNlcnZlcjoyMy4wMSAtLWxvY2FsLXNjaGVkdWxlcj1UcnVl MzMyMg== 1 no LQ==
-
--- task infos
-task module   : aframe.tasks.infer.infer
-task family   : DeployInferLocal
-task params   : --log-file=NO_STR --clear-logs=False --dev=True --gpus=0,1 --image=/home/seiya.tsukamoto/aframe/images/infer.sif --container-root=/home/seiya.tsukamoto/aframe/images/ --accounting-group-user=seiya.tsukamoto --accounting-group=ligo.dev.o4.cbc.allsky.aframe --request-disk=1G --request-memory=6G --request-cpus=1 --ifos='["H1", "L1"]' --inference-sampling-rate=1.0 --batch-size=128 --psd-length=64.0 --cluster-window-length=32.0 --integration-window-length=6.0 --fduration=1.0 --Tb=31536000.0 --shifts='[0, 1]' --sequence-id=1001 --model-name=aframe-stream --model-version=-1 --streams-per-gpu=6 --rate-per-gpu=70.0 --zero-lag=True --return-timeseries=False --output-dir=/home/seiya.tsukamoto/aframe/layered/band_0/results --train-task=Train --condor-directory=/home/seiya.tsukamoto/aframe/layered/band_0/condor/infer --triton-image=hermes/tritonserver:23.01 --local-scheduler=True
-branches      : 3322
-job workers   : 1
-auto retry    : no
-dashboard data: -
-
--- files in LAW_JOB_INIT_DIR
-> pwd
-/var/lib/condor/execute/dir_1367386
-> ls -la
-total 96
--rw-r--r--.  1 seiya.tsukamoto seiya.tsukamoto  4246 Aug 29 07:47 ''
-drwx------.  6 seiya.tsukamoto seiya.tsukamoto  4096 Aug 29 07:47 .
-drwxr-xr-x. 13 condor          condor           4096 Aug 29 07:47 ..
--rwx------.  1 seiya.tsukamoto seiya.tsukamoto    48 Aug 29 07:47 .chirp.config
-drwxr-xr-x.  2 seiya.tsukamoto seiya.tsukamoto  4096 Aug 29 07:47 .condor_creds
--rw-r--r--.  1 seiya.tsukamoto seiya.tsukamoto  6618 Aug 29 07:47 .job.ad
--rw-r--r--.  1 seiya.tsukamoto seiya.tsukamoto 10619 Aug 29 07:47 .machine.ad
--rwxr-xr-x.  1 seiya.tsukamoto seiya.tsukamoto 16626 Aug 29 07:47 htcondor_wrapper_92f95fd2e6_1040.sh
-drwx------.  3 seiya.tsukamoto seiya.tsukamoto  4096 Aug 29 07:47 job_qpHqp3uMdwF3
--rwxrwxr-x.  1 seiya.tsukamoto seiya.tsukamoto 20115 Aug 29 07:47 law_job_0e5c1d7d9a.sh
-drwx------.  2 seiya.tsukamoto seiya.tsukamoto  4096 Aug 29 07:47 tmp
-drwx------.  3 seiya.tsukamoto seiya.tsukamoto  4096 Aug 29 07:47 var
-
--- link input files
-link /var/lib/condor/execute/dir_1367386/htcondor_wrapper_92f95fd2e6_1040.sh
-
--- files in LAW_JOB_HOME
-> pwd
-/var/lib/condor/execute/dir_1367386/job_qpHqp3uMdwF3
-> ls -la
-total 16
-drwx------. 3 seiya.tsukamoto seiya.tsukamoto 4096 Aug 29 07:47 .
-drwx------. 6 seiya.tsukamoto seiya.tsukamoto 4096 Aug 29 07:47 ..
-lrwxrwxrwx. 1 seiya.tsukamoto seiya.tsukamoto   71 Aug 29 07:47 htcondor_wrapper_92f95fd2e6_1040.sh -> /var/lib/condor/execute/dir_1367386/htcondor_wrapper_92f95fd2e6_1040.sh
-drwxr-xr-x. 2 seiya.tsukamoto seiya.tsukamoto 4096 Aug 29 07:47 tmp
-
--- setup -------------------------------------------------------------------------------------------
-
--- bootstrap file
-bootstrap file empty, skip
-
--- bootstrap command
-bootstrap command empty, skip
-
--- detect law
-found law at /home/seiya.tsukamoto/aframe/.venv/lib/python3.10/site-packages/law
-
--- setup dashboard
-dashboard file empty, skip
-
--- environment variables
-PATH           : /home/seiya.tsukamoto/aframe/.venv/bin:/usr/share/Modules/bin:/opt/intel/oneapi/vtune/2025.4/bin64:/opt/intel/oneapi/vpl/2022.2.5/bin:/opt/intel/oneapi/mkl/2025.2/bin:/opt/intel/oneapi/itac/2021.10.0/bin:/opt/intel/oneapi/ishmem/1.4/bin:/opt/intel/oneapi/inspector/2023.2.0/bin64:/opt/intel/oneapi/dpcpp-ct/2025.2/bin:/opt/intel/oneapi/dev-utilities/2025.2/bin:/opt/intel/oneapi/debugger/2025.2/opt/debugger/bin:/opt/intel/oneapi/compiler/2025.2/bin:/opt/intel/oneapi/clck/2021.7.1/bin/intel64:/opt/intel/oneapi/advisor/2025.2/bin64:/cvmfs/software.igwn.org/conda/envs/igwn-py310-20250729/epics/bin/linux-x86_64:/home/seiya.tsukamoto/.conda/envs/aframe/bin:/cvmfs/software.igwn.org/conda/condabin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/ldcg/matlab_r2020b/bin:/opt/puppetlabs/bin:/home/seiya.tsukamoto/bin
-PYTHONPATH     : 
-LD_LIBRARY_PATH: 
-CPATH          : 
-
--- hook law_hook_job_running -----------------------------------------------------------------------
-
-function 'law_hook_job_running' does not exist, skip
-
--- run task branch 3322 ----------------------------------------------------------------------------
-
-cmd: law run aframe.tasks.infer.infer.DeployInferLocal --log-file=NO_STR --clear-logs=False --dev=True --gpus=0,1 --image=/home/seiya.tsukamoto/aframe/images/infer.sif --container-root=/home/seiya.tsukamoto/aframe/images/ --accounting-group-user=seiya.tsukamoto --accounting-group=ligo.dev.o4.cbc.allsky.aframe --request-disk=1G --request-memory=6G --request-cpus=1 --ifos='["H1", "L1"]' --inference-sampling-rate=1.0 --batch-size=128 --psd-length=64.0 --cluster-window-length=32.0 --integration-window-length=6.0 --fduration=1.0 --Tb=31536000.0 --shifts='[0, 1]' --sequence-id=1001 --model-name=aframe-stream --model-version=-1 --streams-per-gpu=6 --rate-per-gpu=70.0 --zero-lag=True --return-timeseries=False --output-dir=/home/seiya.tsukamoto/aframe/layered/band_0/results --train-task=Train --condor-directory=/home/seiya.tsukamoto/aframe/layered/band_0/condor/infer --triton-image=hermes/tritonserver:23.01 --local-scheduler=True --branch=3322  --workers=1
-
--- dependency tree
-print task dependencies with max_depth 2
-
-0 > DeployInferLocal(effective_workflow=local, branch=3322, image=/home/seiya.tsukamoto/aframe/images/infer.sif, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=1G, request_memory=6G, request_cpus=1, ifos=["H1", "L1"], inference_sampling_rate=1.0, batch_size=128, psd_length=64.0, cluster_window_length=32.0, integration_window_length=6.0, fduration=1.0, Tb=31536000.0, shifts=[0, 1], sequence_id=1001, model_name=aframe-stream, model_version=-1, streams_per_gpu=6, rate_per_gpu=70.0, zero_lag=True, return_timeseries=False, output_dir=/home/seiya.tsukamoto/aframe/layered/band_0/results, train_task=Train, condor_directory=/home/seiya.tsukamoto/aframe/layered/band_0/condor/infer, triton_image=hermes/tritonserver:23.01)
-
--- execute attempt 1
-29/08/2025 07:48:22.968697415 (CDT)
-INFO: luigi-interface - Informed scheduler that task   DeployInferLocal_31536000_0_ligo_dev_o4_cbc__seiya_tsukamoto_5fac558764   has status   PENDING
-INFO: Informed scheduler that task   DeployInferLocal_31536000_0_ligo_dev_o4_cbc__seiya_tsukamoto_5fac558764   has status   PENDING
-INFO: luigi-interface - Done scheduling tasks
-INFO: Done scheduling tasks
-INFO: luigi-interface - Running Worker with 1 processes
-INFO: Running Worker with 1 processes
-INFO: luigi-interface - [pid 1369446] Worker Worker(salt=4697082064, workers=1, host=node554.ldas.ligo-la.caltech.edu, username=seiya.tsukamoto, pid=1369446) running   DeployInferLocal(effective_workflow=local, branch=3322, image=/home/seiya.tsukamoto/aframe/images/infer.sif, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=1G, request_memory=6G, request_cpus=1, ifos=["H1", "L1"], inference_sampling_rate=1.0, batch_size=128, psd_length=64.0, cluster_window_length=32.0, integration_window_length=6.0, fduration=1.0, Tb=31536000.0, shifts=[0, 1], sequence_id=1001, model_name=aframe-stream, model_version=-1, streams_per_gpu=6, rate_per_gpu=70.0, zero_lag=True, return_timeseries=False, output_dir=/home/seiya.tsukamoto/aframe/layered/band_0/results, train_task=Train, condor_directory=/home/seiya.tsukamoto/aframe/layered/band_0/condor/infer, triton_image=hermes/tritonserver:23.01)
-INFO: [pid 1369446] Worker Worker(salt=4697082064, workers=1, host=node554.ldas.ligo-la.caltech.edu, username=seiya.tsukamoto, pid=1369446) running   DeployInferLocal(effective_workflow=local, branch=3322, image=/home/seiya.tsukamoto/aframe/images/infer.sif, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=1G, request_memory=6G, request_cpus=1, ifos=["H1", "L1"], inference_sampling_rate=1.0, batch_size=128, psd_length=64.0, cluster_window_length=32.0, integration_window_length=6.0, fduration=1.0, Tb=31536000.0, shifts=[0, 1], sequence_id=1001, model_name=aframe-stream, model_version=-1, streams_per_gpu=6, rate_per_gpu=70.0, zero_lag=True, return_timeseries=False, output_dir=/home/seiya.tsukamoto/aframe/layered/band_0/results, train_task=Train, condor_directory=/home/seiya.tsukamoto/aframe/layered/band_0/condor/infer, triton_image=hermes/tritonserver:23.01)
-
-=============================== entering sandbox ===============================
-task   : DeployInferLocal_31536000_0_ligo_dev_o4_cbc__seiya_tsukamoto_5fac558764
-sandbox: aframe::/home/seiya.tsukamoto/aframe/images/infer.sif
-================================================================================
-
-INFO: luigi-interface - Done scheduling tasks
-INFO: Done scheduling tasks
-INFO: luigi-interface - Running Worker with 1 processes
-INFO: Running Worker with 1 processes
-INFO: luigi-interface - [pid 1369632] Worker Worker(salt=4697082064, workers=1, host=node554.ldas.ligo-la.caltech.edu, username=seiya.tsukamoto, pid=1369446) running   DeployInferLocal(effective_workflow=local, branch=3322, image=/home/seiya.tsukamoto/aframe/images/infer.sif, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=1G, request_memory=6G, request_cpus=1, ifos=["H1", "L1"], inference_sampling_rate=1.0, batch_size=128, psd_length=64.0, cluster_window_length=32.0, integration_window_length=6.0, fduration=1.0, Tb=31536000.0, shifts=[0, 1], sequence_id=1001, model_name=aframe-stream, model_version=-1, streams_per_gpu=6, rate_per_gpu=70.0, zero_lag=True, return_timeseries=False, output_dir=/home/seiya.tsukamoto/aframe/layered/band_0/results, train_task=Train, condor_directory=/home/seiya.tsukamoto/aframe/layered/band_0/condor/infer, triton_image=hermes/tritonserver:23.01)
-INFO: [pid 1369632] Worker Worker(salt=4697082064, workers=1, host=node554.ldas.ligo-la.caltech.edu, username=seiya.tsukamoto, pid=1369446) running   DeployInferLocal(effective_workflow=local, branch=3322, image=/home/seiya.tsukamoto/aframe/images/infer.sif, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=1G, request_memory=6G, request_cpus=1, ifos=["H1", "L1"], inference_sampling_rate=1.0, batch_size=128, psd_length=64.0, cluster_window_length=32.0, integration_window_length=6.0, fduration=1.0, Tb=31536000.0, shifts=[0, 1], sequence_id=1001, model_name=aframe-stream, model_version=-1, streams_per_gpu=6, rate_per_gpu=70.0, zero_lag=True, return_timeseries=False, output_dir=/home/seiya.tsukamoto/aframe/layered/band_0/results, train_task=Train, condor_directory=/home/seiya.tsukamoto/aframe/layered/band_0/condor/infer, triton_image=hermes/tritonserver:23.01)
-PyCBC.libutils: pkg-config call failed, setting NO_PKGCONFIG=1
-  0%|          | 0/61 [00:00<?, ?it/s]  2%|▏         | 1/61 [00:00<00:34,  1.73it/s]  5%|▍         | 3/61 [00:00<00:13,  4.19it/s]  8%|▊         | 5/61 [00:01<00:09,  5.74it/s] 11%|█▏        | 7/61 [00:01<00:07,  6.89it/s] 15%|█▍        | 9/61 [00:01<00:06,  7.71it/s] 18%|█▊        | 11/61 [00:01<00:06,  7.96it/s] 21%|██▏       | 13/61 [00:01<00:05,  8.65it/s] 25%|██▍       | 15/61 [00:02<00:04,  9.26it/s] 26%|██▌       | 16/61 [00:02<00:04,  9.07it/s] 30%|██▉       | 18/61 [00:02<00:04,  8.94it/s] 33%|███▎      | 20/61 [00:02<00:04,  9.43it/s] 36%|███▌      | 22/61 [00:02<00:04,  9.26it/s] 38%|███▊      | 23/61 [00:02<00:04,  8.96it/s] 39%|███▉      | 24/61 [00:03<00:04,  8.99it/s] 41%|████      | 25/61 [00:03<00:04,  8.95it/s] 44%|████▍     | 27/61 [00:03<00:03,  9.42it/s] 48%|████▊     | 29/61 [00:03<00:03,  9.71it/s] 51%|█████     | 31/61 [00:03<00:03,  9.75it/s] 54%|█████▍    | 33/61 [00:03<00:02, 10.47it/s] 57%|█████▋    | 35/61 [00:04<00:02, 10.90it/s] 61%|██████    | 37/61 [00:04<00:02, 10.68it/s] 64%|██████▍   | 39/61 [00:04<00:02, 10.75it/s] 67%|██████▋   | 41/61 [00:04<00:01, 10.85it/s] 70%|███████   | 43/61 [00:04<00:01, 10.80it/s] 74%|███████▍  | 45/61 [00:05<00:01, 10.94it/s] 77%|███████▋  | 47/61 [00:05<00:01, 10.92it/s] 80%|████████  | 49/61 [00:05<00:01, 10.84it/s] 84%|████████▎ | 51/61 [00:05<00:00, 10.94it/s] 87%|████████▋ | 53/61 [00:05<00:00, 11.31it/s] 90%|█████████ | 55/61 [00:05<00:00, 11.30it/s] 93%|█████████▎| 57/61 [00:06<00:00, 11.50it/s] 97%|█████████▋| 59/61 [00:06<00:00, 11.72it/s]100%|██████████| 61/61 [00:06<00:00, 11.57it/s]100%|██████████| 61/61 [00:06<00:00,  9.48it/s]
-INFO: luigi-interface - [pid 1369632] Worker Worker(salt=4697082064, workers=1, host=node554.ldas.ligo-la.caltech.edu, username=seiya.tsukamoto, pid=1369446) done      DeployInferLocal(effective_workflow=local, branch=3322, image=/home/seiya.tsukamoto/aframe/images/infer.sif, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=1G, request_memory=6G, request_cpus=1, ifos=["H1", "L1"], inference_sampling_rate=1.0, batch_size=128, psd_length=64.0, cluster_window_length=32.0, integration_window_length=6.0, fduration=1.0, Tb=31536000.0, shifts=[0, 1], sequence_id=1001, model_name=aframe-stream, model_version=-1, streams_per_gpu=6, rate_per_gpu=70.0, zero_lag=True, return_timeseries=False, output_dir=/home/seiya.tsukamoto/aframe/layered/band_0/results, train_task=Train, condor_directory=/home/seiya.tsukamoto/aframe/layered/band_0/condor/infer, triton_image=hermes/tritonserver:23.01)
-INFO: [pid 1369632] Worker Worker(salt=4697082064, workers=1, host=node554.ldas.ligo-la.caltech.edu, username=seiya.tsukamoto, pid=1369446) done      DeployInferLocal(effective_workflow=local, branch=3322, image=/home/seiya.tsukamoto/aframe/images/infer.sif, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=1G, request_memory=6G, request_cpus=1, ifos=["H1", "L1"], inference_sampling_rate=1.0, batch_size=128, psd_length=64.0, cluster_window_length=32.0, integration_window_length=6.0, fduration=1.0, Tb=31536000.0, shifts=[0, 1], sequence_id=1001, model_name=aframe-stream, model_version=-1, streams_per_gpu=6, rate_per_gpu=70.0, zero_lag=True, return_timeseries=False, output_dir=/home/seiya.tsukamoto/aframe/layered/band_0/results, train_task=Train, condor_directory=/home/seiya.tsukamoto/aframe/layered/band_0/condor/infer, triton_image=hermes/tritonserver:23.01)
-INFO:luigi-interface:[pid 1369632] Worker Worker(salt=4697082064, workers=1, host=node554.ldas.ligo-la.caltech.edu, username=seiya.tsukamoto, pid=1369446) done      DeployInferLocal(effective_workflow=local, branch=3322, image=/home/seiya.tsukamoto/aframe/images/infer.sif, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=1G, request_memory=6G, request_cpus=1, ifos=["H1", "L1"], inference_sampling_rate=1.0, batch_size=128, psd_length=64.0, cluster_window_length=32.0, integration_window_length=6.0, fduration=1.0, Tb=31536000.0, shifts=[0, 1], sequence_id=1001, model_name=aframe-stream, model_version=-1, streams_per_gpu=6, rate_per_gpu=70.0, zero_lag=True, return_timeseries=False, output_dir=/home/seiya.tsukamoto/aframe/layered/band_0/results, train_task=Train, condor_directory=/home/seiya.tsukamoto/aframe/layered/band_0/condor/infer, triton_image=hermes/tritonserver:23.01)
-INFO: luigi-interface - This progress looks :) because there were no failed tasks or missing dependencies
-INFO: This progress looks :) because there were no failed tasks or missing dependencies
-INFO:luigi-interface:This progress looks :) because there were no failed tasks or missing dependencies
-
-=============================== leaving sandbox ================================
-task   : DeployInferLocal_31536000_0_ligo_dev_o4_cbc__seiya_tsukamoto_5fac558764
-sandbox: aframe::/home/seiya.tsukamoto/aframe/images/infer.sif
-================================================================================
-
-INFO: luigi-interface - [pid 1369446] Worker Worker(salt=4697082064, workers=1, host=node554.ldas.ligo-la.caltech.edu, username=seiya.tsukamoto, pid=1369446) done      DeployInferLocal(effective_workflow=local, branch=3322, image=/home/seiya.tsukamoto/aframe/images/infer.sif, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=1G, request_memory=6G, request_cpus=1, ifos=["H1", "L1"], inference_sampling_rate=1.0, batch_size=128, psd_length=64.0, cluster_window_length=32.0, integration_window_length=6.0, fduration=1.0, Tb=31536000.0, shifts=[0, 1], sequence_id=1001, model_name=aframe-stream, model_version=-1, streams_per_gpu=6, rate_per_gpu=70.0, zero_lag=True, return_timeseries=False, output_dir=/home/seiya.tsukamoto/aframe/layered/band_0/results, train_task=Train, condor_directory=/home/seiya.tsukamoto/aframe/layered/band_0/condor/infer, triton_image=hermes/tritonserver:23.01)
-INFO: [pid 1369446] Worker Worker(salt=4697082064, workers=1, host=node554.ldas.ligo-la.caltech.edu, username=seiya.tsukamoto, pid=1369446) done      DeployInferLocal(effective_workflow=local, branch=3322, image=/home/seiya.tsukamoto/aframe/images/infer.sif, accounting_group_user=seiya.tsukamoto, accounting_group=ligo.dev.o4.cbc.allsky.aframe, request_disk=1G, request_memory=6G, request_cpus=1, ifos=["H1", "L1"], inference_sampling_rate=1.0, batch_size=128, psd_length=64.0, cluster_window_length=32.0, integration_window_length=6.0, fduration=1.0, Tb=31536000.0, shifts=[0, 1], sequence_id=1001, model_name=aframe-stream, model_version=-1, streams_per_gpu=6, rate_per_gpu=70.0, zero_lag=True, return_timeseries=False, output_dir=/home/seiya.tsukamoto/aframe/layered/band_0/results, train_task=Train, condor_directory=/home/seiya.tsukamoto/aframe/layered/band_0/condor/infer, triton_image=hermes/tritonserver:23.01)
-INFO: luigi-interface - Informed scheduler that task   DeployInferLocal_31536000_0_ligo_dev_o4_cbc__seiya_tsukamoto_5fac558764   has status   DONE
-INFO: Informed scheduler that task   DeployInferLocal_31536000_0_ligo_dev_o4_cbc__seiya_tsukamoto_5fac558764   has status   DONE
-INFO: luigi-interface - Worker Worker(salt=4697082064, workers=1, host=node554.ldas.ligo-la.caltech.edu, username=seiya.tsukamoto, pid=1369446) was stopped. Shutting down Keep-Alive thread
-INFO: Worker Worker(salt=4697082064, workers=1, host=node554.ldas.ligo-la.caltech.edu, username=seiya.tsukamoto, pid=1369446) was stopped. Shutting down Keep-Alive thread
-INFO: luigi-interface - 
-===== Luigi Execution Summary =====
-
-Scheduled 1 tasks of which:
-* 1 ran successfully:
-    - 1 DeployInferLocal(...)
-
-This progress looks :) because there were no failed tasks or missing dependencies
-
-===== Luigi Execution Summary =====
-
-INFO: 
-===== Luigi Execution Summary =====
-
-Scheduled 1 tasks of which:
-* 1 ran successfully:
-    - 1 DeployInferLocal(...)
-
-This progress looks :) because there were no failed tasks or missing dependencies
-
-===== Luigi Execution Summary =====
-
-task exit code: 0
-29/08/2025 07:49:36.670080863 (CDT)
-
--- hook law_hook_job_finished ----------------------------------------------------------------------
-
-function 'law_hook_job_finished' does not exist, skip
-
--- stageout ----------------------------------------------------------------------------------------
-
--- stageout file
-stageout file empty, skip
-
--- stageout command
-stageout command empty, skip
-
--- cleanup -----------------------------------------------------------------------------------------
-
--- files before cleanup
-> ls -a /var/lib/condor/execute/dir_1367386/job_qpHqp3uMdwF3 ($LAW_JOB_HOME)
-total 16
-drwx------. 3 seiya.tsukamoto seiya.tsukamoto 4096 Aug 29 07:47 .
-drwx------. 6 seiya.tsukamoto seiya.tsukamoto 4096 Aug 29 07:47 ..
-lrwxrwxrwx. 1 seiya.tsukamoto seiya.tsukamoto   71 Aug 29 07:47 htcondor_wrapper_92f95fd2e6_1040.sh -> /var/lib/condor/execute/dir_1367386/htcondor_wrapper_92f95fd2e6_1040.sh
-drwxr-xr-x. 3 seiya.tsukamoto seiya.tsukamoto 4096 Aug 29 07:49 tmp
-
--- files after cleanup
-> ls -a /var/lib/condor/execute/dir_1367386 ($LAW_JOB_INIT_DIR)
-total 104
--rw-r--r--.  1 seiya.tsukamoto seiya.tsukamoto 23363 Aug 29 07:49 ''
-drwx------.  5 seiya.tsukamoto seiya.tsukamoto  4096 Aug 29 07:49 .
-drwxr-xr-x. 11 condor          condor            176 Aug 29 07:49 ..
--rwx------.  1 seiya.tsukamoto seiya.tsukamoto    48 Aug 29 07:47 .chirp.config
-drwxr-xr-x.  2 seiya.tsukamoto seiya.tsukamoto  4096 Aug 29 07:47 .condor_creds
--rw-r--r--.  1 seiya.tsukamoto seiya.tsukamoto  6618 Aug 29 07:47 .job.ad
--rw-r--r--.  1 seiya.tsukamoto seiya.tsukamoto 10619 Aug 29 07:47 .machine.ad
--rwxr-xr-x.  1 seiya.tsukamoto seiya.tsukamoto 16626 Aug 29 07:47 htcondor_wrapper_92f95fd2e6_1040.sh
--rwxrwxr-x.  1 seiya.tsukamoto seiya.tsukamoto 20115 Aug 29 07:47 law_job_0e5c1d7d9a.sh
-drwx------.  3 seiya.tsukamoto seiya.tsukamoto  4096 Aug 29 07:49 tmp
-drwx------.  3 seiya.tsukamoto seiya.tsukamoto  4096 Aug 29 07:47 var
-
--- end ---------------------------------------------------------------------------------------------
-
-start time    : 29/08/2025 07:47:30.807657522 (CDT)
-end time      : 29/08/2025 07:49:36.808159507 (CDT)
-job exit code : 0
-
-
-================================================================================
-=== End of law job
-================================================================================
-

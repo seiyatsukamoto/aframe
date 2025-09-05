@@ -1,0 +1,96 @@
+batch_size: 512
+batches_per_epoch: 1000
+chunk_size: 10000
+chunks_per_epoch: 10
+data_dir: /home/seiya.tsukamoto/aframe/layered/data/train
+fduration: 1.0
+fftlength: null
+file_sample_rate: 2048.0
+highpass: 32.0
+ifos:
+- H1
+- L1
+kernel_length: 4.0
+learning_rate: 0.000585
+left_pad: 0.25
+lowpass: 64.0
+max_snr: 100.0
+min_valid_duration: 15000.0
+mute_prob: 0.055
+num_files_per_batch: 10
+num_valid_views: 5
+pct_lr_ramp: 0.115
+psd_length: 8.0
+right_pad: 0.05
+sample_rate: 512.0
+snr_alpha: 3.0
+snr_sampler: !!python/object:ml4gw.distributions.PowerLaw
+  _batch_shape: !!python/object/apply:torch.Size
+  - !!python/tuple []
+  _event_shape: !!python/object/apply:torch.Size
+  - !!python/tuple []
+  base_dist: !!python/object:torch.distributions.uniform.Uniform
+    _batch_shape: !!python/object/apply:torch.Size
+    - !!python/tuple []
+    _event_shape: !!python/object/apply:torch.Size
+    - !!python/tuple []
+    _validate_args: false
+    high: !!python/object/apply:torch._utils._rebuild_tensor_v2
+    - !!python/object/apply:torch.storage._load_from_bytes
+      - !!binary |
+        gAKKCmz8nEb5IGqoUBkugAJN6QMugAJ9cQAoWBAAAABwcm90b2NvbF92ZXJzaW9ucQFN6QNYDQAA
+        AGxpdHRsZV9lbmRpYW5xAohYCgAAAHR5cGVfc2l6ZXNxA31xBChYBQAAAHNob3J0cQVLAlgDAAAA
+        aW50cQZLBFgEAAAAbG9uZ3EHSwR1dS6AAihYBwAAAHN0b3JhZ2VxAGN0b3JjaApGbG9hdFN0b3Jh
+        Z2UKcQFYDgAAADk0OTE1OTQzNzIzNDI0cQJYAwAAAGNwdXEDSwFOdHEEUS6AAl1xAFgOAAAAOTQ5
+        MTU5NDM3MjM0MjRxAWEuAQAAAAAAAAAXt1G4
+    - 0
+    - !!python/tuple []
+    - !!python/tuple []
+    - false
+    - !!python/object/apply:collections.OrderedDict
+      - []
+    low: !!python/object/apply:torch._utils._rebuild_tensor_v2
+    - !!python/object/apply:torch.storage._load_from_bytes
+      - !!binary |
+        gAKKCmz8nEb5IGqoUBkugAJN6QMugAJ9cQAoWBAAAABwcm90b2NvbF92ZXJzaW9ucQFN6QNYDQAA
+        AGxpdHRsZV9lbmRpYW5xAohYCgAAAHR5cGVfc2l6ZXNxA31xBChYBQAAAHNob3J0cQVLAlgDAAAA
+        aW50cQZLBFgEAAAAbG9uZ3EHSwR1dS6AAihYBwAAAHN0b3JhZ2VxAGN0b3JjaApGbG9hdFN0b3Jh
+        Z2UKcQFYDgAAADk0OTE2MDgzNjYyMTI4cQJYAwAAAGNwdXEDSwFOdHEEUS6AAl1xAFgOAAAAOTQ5
+        MTYwODM2NjIxMjhxAWEuAQAAAAAAAAAAAAC9
+    - 0
+    - !!python/tuple []
+    - !!python/tuple []
+    - false
+    - !!python/object/apply:collections.OrderedDict
+      - []
+  transforms:
+  - !!python/object:torch.distributions.transforms.AffineTransform
+    _cache_size: 0
+    _event_dim: 0
+    _inv: null
+    loc: 0
+    scale: -2
+  - !!python/object:torch.distributions.transforms.PowerTransform
+    _cache_size: 0
+    _inv: null
+    exponent: !!python/object/apply:torch._utils._rebuild_tensor_v2
+    - !!python/object/apply:torch.storage._load_from_bytes
+      - !!binary |
+        gAKKCmz8nEb5IGqoUBkugAJN6QMugAJ9cQAoWBAAAABwcm90b2NvbF92ZXJzaW9ucQFN6QNYDQAA
+        AGxpdHRsZV9lbmRpYW5xAohYCgAAAHR5cGVfc2l6ZXNxA31xBChYBQAAAHNob3J0cQVLAlgDAAAA
+        aW50cQZLBFgEAAAAbG9uZ3EHSwR1dS6AAihYBwAAAHN0b3JhZ2VxAGN0b3JjaApGbG9hdFN0b3Jh
+        Z2UKcQFYDgAAADk0OTE2MDU0NjEyMzUycQJYAwAAAGNwdXEDSwFOdHEEUS6AAl1xAFgOAAAAOTQ5
+        MTYwNTQ2MTIzNTJxAWEuAQAAAAAAAAAAAAC/
+    - 0
+    - !!python/tuple []
+    - !!python/tuple []
+    - false
+    - !!python/object/apply:collections.OrderedDict
+      - []
+swap_prob: 0.014
+valid_frac: 0.25
+valid_livetime: 57600.0
+valid_stride: 0.5
+verbose: false
+waveform_prob: 0.277
+weight_decay: 0.0

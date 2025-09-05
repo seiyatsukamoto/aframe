@@ -13,6 +13,7 @@ from ml4gw.utils.slicing import sample_kernels
 
 from train.data.supervised.supervised import SupervisedAframeDataset
 from train.data.resampled_hdf5_dataset import ResampledHdf5TimeSeriesDataset
+from train.data.base import ZippedDataset
 from torchaudio.transforms import Resample
 
 from ledger.injections import WaveformSet, waveform_class_factory
@@ -28,24 +29,6 @@ from utils import x_per_y
 from utils.preprocessing import PsdEstimator
 
 Tensor = torch.Tensor
-
-class ZippedDataset(torch.utils.data.IterableDataset):
-    def __init__(self, *datasets, minimum: Optional[int] = None):
-        super().__init__()
-        self.datasets = datasets
-        self.minimum = minimum
-
-    def __len__(self):
-        lengths = []
-        for dset in self.datasets:
-            try:
-                lengths.append(len(dset))
-            except Exception as e:
-                raise e from None
-        return self.minimum or min(lengths)
-
-    def __iter__(self):
-        return zip(*self.datasets)
 
 class ResampledAframeDataset_v2(SupervisedAframeDataset):
     def __init__(
@@ -222,128 +205,3 @@ class ResampledAframeDataset_v2(SupervisedAframeDataset):
         X = self.whitener(X, psds)
         return X, y
 
-
-class FFTAframeDataset(SupervisedAframeDataset):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-    
-    def build_transforms(self):
-        """
-        Helper utility in case we ever want to construct
-        this dataset on its own.
-        """
-        window_length = self.hparams.kernel_length + self.hparams.fduration
-        fftlength = self.hparams.fftlength or window_length
-        self.psd_estimator = PsdEstimator(
-            window_length,
-            self.hparams.sample_rate,
-            fftlength,
-            window=self.psd_window,
-            fast=self.hparams.highpass is not None,
-            average="median",
-        )
-        self.whitener = Whiten(
-            self.hparams.fduration,
-            self.hparams.sample_rate,
-            self.hparams.highpass,
-            self.hparams.lowpass,
-        )
-        self.projector = aug.WaveformProjector(
-            self.hparams.ifos,
-            self.hparams.sample_rate,
-            self.hparams.highpass,
-            self.hparams.lowpass,
-        )
-    
-    @torch.no_grad()
-    def build_val_batches(self, background, signals):
-        X_bg, X_inj, psds = super().build_val_batches(background, signals)
-        # whiten each view of injections
-        X_fg = []
-        for inj in X_inj:
-            inj = self.whitener(inj, psds)
-            freqs = torch.fft.rfftfreq(
-                inj.shape[-1], d=1 / self.hparams.sample_rate
-            )
-            inj = torch.fft.rfft(inj)
-            mask = freqs >= self.hparams.highpass
-            mask *= freqs <= self.hparams.lowpass
-            inj = inj[:, :, mask]
-            X_fg.append(inj)
-
-        X_fg = torch.stack(X_fg)
-        
-        X_bg = self.whitener(X_bg, psds)
-        freqs = torch.fft.rfftfreq(
-                X_bg.shape[-1], d=1 / self.hparams.sample_rate
-        )
-        X_bg = torch.fft.rfft(X_bg)
-        mask = freqs >= self.hparams.highpass
-        mask *= freqs <= self.hparams.lowpass
-        X_bg = X_bg[..., mask]
-        
-        freqs = np.linspace(0, self.hparams.sample_rate/2, psds.shape[-1])
-        mask = freqs >= self.hparams.highpass
-        mask *= freqs <= self.hparams.lowpass
-        psds = psds[..., mask]
-        asds = (psds**0.5 * 1e23).float()
-        
-        if asds.shape[-1] != X_fg.shape[-1]:
-            asds = F.interpolate(asds, size=(X_fg.shape[-1],), mode="linear", align_corners=False)
-        
-        X_bg = torch.cat((X_bg.real, X_bg.imag, 1/asds), dim=1)
-        asds = asds.unsqueeze(dim = 0).repeat(self.hparams.num_valid_views,1,1,1)
-        X_fg = torch.cat((X_fg.real, X_fg.imag, 1/asds), dim=2)
-        return X_bg, X_fg
-
-    def on_after_batch_transfer(self, batch, _):
-        """
-        This is a method inherited from the DataModule
-        base class that gets called after data returned
-        by a dataloader gets put on the local device,
-        but before it gets passed to the LightningModule.
-        Use this to do on-device augmentation/preprocessing.
-        """
-        if self.trainer.training:
-            # if we're training, perform random augmentations
-            # on input data and use it to impact labels
-            [X], waveforms = batch
-            batch = self.augment(X, waveforms)
-        elif self.trainer.validating or self.trainer.sanity_checking:
-            # If we're in validation mode but we're not validating
-            # on the local device, the relevant tensors will be
-            # empty, so just pass them through with a 0 shift to
-            # indicate that this should be ignored
-            [background, _, timeslide_idx], [signals] = batch
-
-            # If we're validating, unfold the background
-            # data into a batch of overlapping kernels now that
-            # we're on the GPU so that we're not transferring as
-            # much data from CPU to GPU. Once everything is
-            # on-device, pre-inject signals into background.
-            shift = self.timeslides[timeslide_idx].shift_size
-            X_bg, X_fg = self.build_val_batches(background, signals)
-            batch = (shift, X_bg, X_fg)
-        return batch
-
-    def augment(self, X, waveforms):
-        X, y, psds = super().augment(X, waveforms)
-        
-        X = self.whitener(X, psds)
-        X_fft = torch.fft.rfft(X)
-        freqs = torch.fft.rfftfreq(
-            X.shape[-1], d=1 / self.hparams.sample_rate
-        )
-        mask = freqs >= self.hparams.highpass
-        mask *= freqs <= self.hparams.lowpass
-        X_fft = X_fft[:, :, mask]
-
-        freqs = np.linspace(0, self.hparams.sample_rate/2, psds.shape[-1])
-        mask = freqs >= self.hparams.highpass
-        mask *= freqs <= self.hparams.lowpass
-        psds = psds[:, :, mask]
-        asds = (psds**0.5 * 1e23).float()
-        if asds.shape[-1] != X_fft.shape[-1]:
-            asds = F.interpolate(asds, size=(X_fft.shape[-1],), mode="linear", align_corners=False)
-            
-        return torch.cat((X_fft.real, X_fft.imag, 1/asds), dim=1), y

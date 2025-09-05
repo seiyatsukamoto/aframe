@@ -4,13 +4,7 @@ from .frequency_domain import (
 )
 from .supervised import SupervisedAframeDataset
 from .time_domain import TimeDomainSupervisedAframeDataset
-from .resampled import (
-    ResampledAframeDataset,
-    FFTAframeDataset,
-)
-from .resampled_v2 import (
-    ResampledAframeDataset_v2,
-)
-from .resampled_v3 import (
-    ResampledAframeDataset_v3,
-)
+from .resampled import ResampledAframeDataset
+from .FFT import FFTAframeDataset
+from .resampled_v2 import ResampledAframeDataset_v2
+from .resampled_v3 import ResampledAframeDataset_v3
