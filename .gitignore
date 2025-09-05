@@ -4,4 +4,9 @@
 **/*.env
 **/id_rsa
 **/*.hdf5
-**/*.ipynb
+**/*.out
+**/*.sh
+**/*.jdl
+**/*.json
+**/*.err
+**/*.sif
