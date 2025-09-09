@@ -8,3 +8,4 @@ from .resampled import ResampledAframeDataset
 from .FFT import FFTAframeDataset
 from .resampled_v2 import ResampledAframeDataset_v2
 from .resampled_v3 import ResampledAframeDataset_v3
+from .multimodal_multiband import MultimodalMultibandDataset

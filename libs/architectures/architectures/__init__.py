@@ -10,3 +10,6 @@ from .bandpass import (
     Bandpass,
     SupervisedFrequencyDomainResNetClasses
 )
+
+from .stackedresnets import MultimodalMultiband
+
