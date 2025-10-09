@@ -1,0 +1,137 @@
+name: "aframe-stream"
+platform: "ensemble"
+input {
+  name: "stream"
+  data_type: TYPE_FP32
+  dims: 2
+  dims: 2
+  dims: 32768
+}
+output {
+  name: "discriminator"
+  data_type: TYPE_FP32
+  dims: 128
+  dims: 1
+}
+ensemble_scheduling {
+  step {
+    model_name: "snapshotter"
+    model_version: -1
+    input_map {
+      key: "stream"
+      value: "stream"
+    }
+    output_map {
+      key: "strain"
+      value: "strain"
+    }
+  }
+  step {
+    model_name: "preprocessor"
+    model_version: -1
+    input_map {
+      key: "strain"
+      value: "strain"
+    }
+    output_map {
+      key: "whitened_0"
+      value: "whitened_0"
+    }
+    output_map {
+      key: "whitened_1"
+      value: "whitened_1"
+    }
+    output_map {
+      key: "whitened_2"
+      value: "whitened_2"
+    }
+    output_map {
+      key: "whitened_3"
+      value: "whitened_3"
+    }
+  }
+  step {
+    model_name: "resnet_0"
+    model_version: -1
+    input_map {
+      key: "whitened_0"
+      value: "whitened_0"
+    }
+    output_map {
+      key: "classes_0"
+      value: "classes_0"
+    }
+  }
+  step {
+    model_name: "resnet_1"
+    model_version: -1
+    input_map {
+      key: "whitened_1"
+      value: "whitened_1"
+    }
+    output_map {
+      key: "classes_1"
+      value: "classes_1"
+    }
+  }
+  step {
+    model_name: "resnet_2"
+    model_version: -1
+    input_map {
+      key: "whitened_2"
+      value: "whitened_2"
+    }
+    output_map {
+      key: "classes_2"
+      value: "classes_2"
+    }
+  }
+  step {
+    model_name: "resnet_3"
+    model_version: -1
+    input_map {
+      key: "whitened_3"
+      value: "whitened_3"
+    }
+    output_map {
+      key: "classes_3"
+      value: "classes_3"
+    }
+  }
+  step {
+    model_name: "concatenation_layer"
+    model_version: -1
+    input_map {
+      key: "classes_0"
+      value: "classes_0"
+    }
+    input_map {
+      key: "classes_1"
+      value: "classes_1"
+    }
+    input_map {
+      key: "classes_2"
+      value: "classes_2"
+    }
+    input_map {
+      key: "classes_3"
+      value: "classes_3"
+    }
+    output_map {
+      key: "concatenated"
+      value: "concatenated"
+    }
+  }
+  step {
+    model_name: "fc"
+    model_version: -1
+    input_map {
+      key: "concatenated"
+      value: "concatenated"
+    }
+    output_map {
+      key: "discriminator"
+      value: "discriminator"
+    }
+  }
+}

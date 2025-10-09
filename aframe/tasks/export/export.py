@@ -9,6 +9,7 @@ from aframe.config import paths
 from aframe.parameters import PathParameter
 from aframe.tasks.export.target import ModelRepositoryTarget
 
+import numpy as np
 
 class ExportParams(law.Task):
     fduration = luigi.FloatParameter()
@@ -26,7 +27,6 @@ class ExportParams(law.Task):
     lowpass = luigi.OptionalFloatParameter(default="")
     q = luigi.OptionalFloatParameter(default="")
     fftlength = luigi.OptionalFloatParameter(default="")
-    resample_rate = luigi.OptionalFloatParameter(default="")
     ifos = luigi.ListParameter()
     repository_directory = PathParameter(
         default=paths().results_dir / "model_repo"
@@ -36,7 +36,16 @@ class ExportParams(law.Task):
         default="TENSORRT",
         description="Platform to use for exporting model for inference",
     )
+    resample_rates = luigi.ListParameter()
+    kernel_lengths = luigi.ListParameter()
+    high_passes = luigi.ListParameter()
+    low_passes = luigi.ListParameter()
+    inference_sampling_rates = luigi.ListParameter()
+    starting_offsets = luigi.ListParameter()
+    classes = luigi.ListParameter()
+    layers = luigi.ListParameter()
 
+    model_type = luigi.Parameter(default="export")
 
 @inherits(ExportParams)
 class ExportLocal(AframeSingularityTask):
@@ -61,8 +70,6 @@ class ExportLocal(AframeSingularityTask):
     def run(self):
         from hermes.quiver import Platform
 
-        from export.main import export
-
         # convert string to Platform enum
         platform = Platform[self.platform]
 
@@ -71,26 +78,72 @@ class ExportLocal(AframeSingularityTask):
         weights = self.input().path
         weights_dir = os.path.dirname(weights)
         batch_file = weights_dir + "/batch.h5"
-
-        export(
-            weights,
-            self.repository_directory,
-            batch_file,
-            self.num_ifos,
-            self.kernel_length,
-            self.inference_sampling_rate,
-            self.sample_rate,
-            self.batch_size,
-            self.fduration,
-            self.psd_length,
-            self.fftlength,
-            self.q,
-            self.highpass,
-            self.lowpass,
-            self.streams_per_gpu,
-            self.aframe_instances,
-            self.preproc_instances,
-            platform,
-            self.resample_rate,
-            clean=self.clean,
-        )
+        if self.model_type == 'mm_export':
+            from export.mm_main import mm_export
+            from export.mm_modules import separate_model
+            separate_model(weights,
+                           batch_file,
+                           self.num_ifos,
+                           self.kernel_length,
+                           self.sample_rate,
+                           self.batch_size,
+                           self.classes,
+                           self.layers,
+                           self.inference_sampling_rates,)
+            mm_export(
+                weights,
+                self.repository_directory,
+                batch_file,
+                self.num_ifos,
+                self.kernel_length,
+                self.inference_sampling_rate,
+                self.sample_rate,
+                self.batch_size,
+                self.fduration,
+                self.psd_length,
+                self.resample_rates,
+                self.kernel_lengths,
+                self.high_passes,
+                self.low_passes,
+                self.inference_sampling_rates,
+                self.starting_offsets,
+                self.classes,
+                self.fftlength,
+                self.q,
+                self.highpass,
+                self.lowpass,
+                self.streams_per_gpu,
+                self.aframe_instances,
+                self.preproc_instances,
+                platform,
+                clean=self.clean,)
+        else:
+            from export.main import export
+            export(
+                weights,
+                self.repository_directory,
+                batch_file,
+                self.num_ifos,
+                self.kernel_length,
+                self.inference_sampling_rate,
+                self.sample_rate,
+                self.batch_size,
+                self.fduration,
+                self.psd_length,
+                self.resample_rates,
+                self.kernel_lengths,
+                self.high_passes,
+                self.low_passes,
+                self.inference_sampling_rates,
+                self.starting_offsets,
+                self.classes,
+                self.fftlength,
+                self.q,
+                self.highpass,
+                self.lowpass,
+                self.streams_per_gpu,
+                self.aframe_instances,
+                self.preproc_instances,
+                platform,
+                clean=self.clean,
+            )

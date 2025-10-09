@@ -12,6 +12,7 @@ dependencies = [
     "ml4gw-hermes[torch]>=0.2.1",
     "aframe",
     "utils",
+    "architectures",
     "jsonargparse>=4.27.1,<5",
     "nvidia-cudnn-cu11==8.9.6.50",
     "tensorrt==8.5.2.2",
@@ -35,6 +36,7 @@ explicit = true
 [tool.uv.sources]
 aframe = { path = "../../", editable = true }
 utils = { path = "../../libs/utils", editable = true }
+architectures = { path = "../../libs/architectures", editable = true }
 
 [build-system]
 requires = ["hatchling"]

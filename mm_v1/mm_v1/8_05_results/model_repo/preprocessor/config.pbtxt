@@ -1,0 +1,41 @@
+name: "preprocessor"
+platform: "pytorch_libtorch"
+input {
+  name: "strain"
+  data_type: TYPE_FP32
+  dims: 2
+  dims: 2
+  dims: 170496
+}
+output {
+  name: "whitened_0"
+  data_type: TYPE_FP32
+  dims: 128
+  dims: 2
+  dims: 1024
+}
+output {
+  name: "whitened_1"
+  data_type: TYPE_FP32
+  dims: 64
+  dims: 2
+  dims: 1024
+}
+output {
+  name: "whitened_2"
+  data_type: TYPE_FP32
+  dims: 32
+  dims: 2
+  dims: 1024
+}
+output {
+  name: "whitened_3"
+  data_type: TYPE_FP32
+  dims: 128
+  dims: 6
+  dims: 993
+}
+instance_group {
+  count: 1
+  kind: KIND_GPU
+}

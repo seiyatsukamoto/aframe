@@ -3,8 +3,9 @@ import os
 import jsonargparse
 
 from export.main import export
+from export.mm_main import mm_export
 from utils.logging import configure_logging
-
+from export.mm_modules import separate_model
 import logging
 
 def build_parser():
@@ -30,8 +31,11 @@ def main(args=None):
     logging.info(args['clean'])
     logging.info(args['aframe_instances'])
     logging.info(args['batch_file'])
-    export(**args)
-
+    if ('model_type' in args.keys()) and (args['model_type'] == 'mm'):
+        separate_model(**args)
+        mm_export(**args)
+    else:
+        export(**args)
 
 if __name__ == "__main__":
     main()

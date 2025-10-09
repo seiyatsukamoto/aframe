@@ -1,0 +1,14 @@
+name: "fc"
+platform: "tensorrt_plan"
+input {
+  name: "concatenated"
+  data_type: TYPE_FP32
+  dims: 128
+  dims: 256
+}
+output {
+  name: "discriminator"
+  data_type: TYPE_FP32
+  dims: 128
+  dims: 1
+}

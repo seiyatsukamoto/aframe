@@ -1,0 +1,15 @@
+name: "resnet_3"
+platform: "tensorrt_plan"
+input {
+  name: "whitened_3"
+  data_type: TYPE_FP32
+  dims: 128
+  dims: 6
+  dims: 993
+}
+output {
+  name: "classes_3"
+  data_type: TYPE_FP32
+  dims: 128
+  dims: 64
+}

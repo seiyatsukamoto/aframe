@@ -1,0 +1,32 @@
+name: "concatenation_layer"
+platform: "tensorrt_plan"
+input {
+  name: "classes_0"
+  data_type: TYPE_FP32
+  dims: 128
+  dims: 64
+}
+input {
+  name: "classes_1"
+  data_type: TYPE_FP32
+  dims: 64
+  dims: 64
+}
+input {
+  name: "classes_2"
+  data_type: TYPE_FP32
+  dims: 32
+  dims: 64
+}
+input {
+  name: "classes_3"
+  data_type: TYPE_FP32
+  dims: 128
+  dims: 64
+}
+output {
+  name: "concatenated"
+  data_type: TYPE_FP32
+  dims: 128
+  dims: 256
+}
