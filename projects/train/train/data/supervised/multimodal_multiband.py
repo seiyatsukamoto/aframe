@@ -39,7 +39,6 @@ class MultimodalMultibandDataset(SupervisedAframeDataset):
         self.low_passes = low_passes
         self.inference_sampling_rates = inference_sampling_rates
         self.min_kernel_size = int(self.hparams.kernel_lengths[0]*self.hparams.sample_rate)
-        self.allowed_offset = 0
         self.initial_offsets = np.array(initial_offsets)
         
     def slice_waveforms(self, waveforms: torch.Tensor) -> torch.Tensor:
