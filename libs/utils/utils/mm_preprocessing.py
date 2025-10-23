@@ -125,9 +125,26 @@ class mm_BatchWhitener(torch.nn.Module):
         self.num_ifos = num_ifos
         # do foreground length calculation in units of samples,
         # then convert back to length to guard for intification
-        self.starting_offsets = [int(kernel_length*sample_rate-so*min(self.stride_sizes)-self.kernel_sizes[i]) 
-                                 for i, so in enumerate(starting_offsets)]
-        self.ending_offsets = [None if int(so*min(self.stride_sizes)) == 0 else -int(so*min(self.stride_sizes)) for so in starting_offsets]
+        starting_offsets = [0, *starting_offsets]
+        self.starting_offsets = []
+        running_offset = 0
+        for so in starting_offsets:
+            running_offset += so
+            self.starting_offsets.append(int(kernel_length*sample_rate-running_offset*min(self.stride_sizes)-self.kernel_sizes[i]))
+
+        self.starting_offsets.append(int(kernel_length*sample_rate-self.kernel_sizes[-1]))
+        
+        self.ending_offsets = []
+        running_offset = 0
+        for so in starting_offsets:
+            running_offset += so
+            if int(running_offset*min(self.stride_sizes)) == 0:
+                self.ending_offsets.append(None)
+            else:
+                self.ending_offsets.append(-int(running_offset*min(self.stride_sizes)))
+
+        self.ending_offsets.append(None)
+        
         stride_size = sample_rate / max(inference_sampling_rates)
         self.kernel_size = int(kernel_length * sample_rate)
         strides = (batch_size - 1) * stride_size
