@@ -6,4 +6,3 @@ from .multimodal import MultiModalSupervisedAframeDataset
 from .supervised import SupervisedAframeDataset
 from .time_domain import TimeDomainSupervisedAframeDataset
 from .multimodal_multiband import MultimodalMultibandDataset
-from .multimodal_multiband_plot import MultimodalMultibandDataset_plot
