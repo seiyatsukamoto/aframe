@@ -15,7 +15,7 @@ from ml4gw.transforms import SpectralDensity
 import random
 Tensor = torch.Tensor
 
-from train.kernel_sampler import sample_kernels_MM
+from ml4gw.utils.slicing import sample_kernels
 from typing import Callable, Optional, Union
 from collections.abc import Sequence
 
@@ -27,11 +27,9 @@ class MultimodalMultibandDataset(SupervisedAframeDataset):
                  resample_rates: Sequence[float], 
                  kernel_lengths: Sequence[float], 
                  high_passes: Sequence[float], 
-                 low_passes: Sequence[float], 
-                 fft_kernel_length: float,
-                 fft_high_pass: float,
-                 fft_low_pass: float,
+                 low_passes: Sequence[float],
                  inference_sampling_rates: Sequence[float],
+                 initial_offsets: Sequence[float],
                  *args, 
                  **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -39,22 +37,18 @@ class MultimodalMultibandDataset(SupervisedAframeDataset):
         self.kernel_lengths = kernel_lengths
         self.high_passes = high_passes
         self.low_passes = low_passes
-        self.fft_kernel_length = fft_kernel_length
-        self.fft_high_pass = fft_high_pass
-        self.fft_low_pass = fft_low_pass
         self.inference_sampling_rates = inference_sampling_rates
-        self.min_kernel_size = int(self.hparams.kernel_lengths[0] * self.hparams.sample_rate)
-        self.allowed_offset = int(1/self.inference_sampling_rates[0]*self.hparams.sample_rate/2)
+        self.min_kernel_size = int(self.hparams.kernel_lengths[0]*self.hparams.sample_rate)
+        self.allowed_offset = 0
+        self.initial_offsets = np.array(initial_offsets)
         
     def slice_waveforms(self, waveforms: torch.Tensor) -> torch.Tensor:
         signal_idx = int(self.signal_time * self.hparams.sample_rate)
         kernel_size = int(self.hparams.kernel_length * self.hparams.sample_rate)
         
-        signal_start = signal_idx - kernel_size - int(1.1*self.min_kernel_size) - self.filter_size//2 + self.allowed_offset
+        signal_start = signal_idx - kernel_size + self.right_pad_size - self.filter_size//2
         
-        signal_stop = signal_idx + int(1.1*self.min_kernel_size) - self.allowed_offset + self.filter_size//2
-        
-        self.post_slice_signal_idx = signal_idx - signal_start
+        signal_stop = signal_idx + self.min_kernel_size - self.left_pad_size + self.filter_size//2
         
         # If signal_start is less than 0, add padding on the left
         if signal_start < 0:
@@ -94,12 +88,6 @@ class MultimodalMultibandDataset(SupervisedAframeDataset):
                 self.hparams.high_passes[band],
                 self.hparams.low_passes[band],
             ))
-        whitener.append(Whiten(
-                self.hparams.fduration,
-                self.hparams.sample_rate,
-                self.hparams.fft_high_pass,
-                self.hparams.fft_low_pass,
-            ))
         self.whitener = torch.nn.ModuleList(whitener)
         resampler = []
         for band in range(len(self.resample_rates)):
@@ -113,20 +101,25 @@ class MultimodalMultibandDataset(SupervisedAframeDataset):
         )
         templates = []
         template_shape = []
-        for x, y in zip(self.inference_sampling_rates[:-1], self.inference_sampling_rates[1:]):
+        for x, y in zip(self.inference_sampling_rates[:-2], self.inference_sampling_rates[1:-1]):
             template_shape.append(int(x/y))
-        for i in range(template_shape[0]):
-            for j in range(template_shape[1]):
-                templates.append([])
-                offset1 = ((i+1)*1/self.inference_sampling_rates[0])*self.hparams.sample_rate
-                offset2 = ((j+1)*1/self.inference_sampling_rates[1])*self.hparams.sample_rate
-                if offset1 == 0:
-                    templates[-1].append(slice(int(-offset1-(self.kernel_lengths[1]+self.hparams.fduration)*self.hparams.sample_rate), None, 1))
+        
+        initial_offsets_rate = self.hparams.sample_rate * self.initial_offsets // max(self.inference_sampling_rates)
+        grid = np.meshgrid(*(range(i) for i in template_shape))
+        grid = [i.flatten() for i in grid]
+        grid = np.dstack(grid)[0]
+        sample_size = [int((self.kernel_lengths[i+1]+self.hparams.fduration)*self.hparams.sample_rate) for i in range(len(self.kernel_lengths)-2)]
+        for x in grid:
+            templates.append([])
+            offsets = [off*self.hparams.sample_rate//self.inference_sampling_rates[i] + initial_offsets_rate[i] for i, off in enumerate(x)]
+            current_offset = 0
+            for off, size in zip(offsets,sample_size):
+                if off == 0:
+                    templates[-1].append(slice(int(-off-size), None, 1))
                 else:
-                    templates[-1].append(slice(int(-offset1-(self.kernel_lengths[1]+self.hparams.fduration)*self.hparams.sample_rate), 
-                                               int(-offset1), 1))
-                templates[-1].append(slice(int(-offset1-offset2-(self.kernel_lengths[2]+self.hparams.fduration)*self.hparams.sample_rate), 
-                                           int(-offset1-offset2), 1))
+                    templates[-1].append(slice(int(-off-size-current_offset), int(-off-current_offset), 1))
+                    current_offset += off
+        
         self.templates = templates
 
     @torch.no_grad()
@@ -171,17 +164,16 @@ class MultimodalMultibandDataset(SupervisedAframeDataset):
         kernel_size = int(self.hparams.kernel_length * self.hparams.sample_rate)
         
         min_start = int(
-            signal_idx - kernel_size - self.filter_size//2 + self.allowed_offset
+            signal_idx - kernel_size - self.filter_size//2 + self.right_pad_size
         )
         max_start = int(
-            signal_idx - kernel_size - self.filter_size//2 + self.min_kernel_size - self.allowed_offset
+            signal_idx - kernel_size - self.filter_size//2 + self.min_kernel_size - self.left_pad_size
         )
-        max_stop = max_start + kernel_size + self.min_kernel_size
+        max_stop = max_start + kernel_size
         pad = max_stop - signals.size(-1)
         if pad > 0:
             signals = torch.nn.functional.pad(signals, [0, pad])
-        step = (max_start - min_start)
-        step /= self.hparams.num_valid_views - 1
+        step = (max_start - min_start)/(self.hparams.num_valid_views - 1)
         X_inj = []
         for i in range(self.hparams.num_valid_views):
             start = max_start - int(i * step)
@@ -197,30 +189,30 @@ class MultimodalMultibandDataset(SupervisedAframeDataset):
         X_bg, X_inj, psds = self.super_build_val_batches(background, signals)
         X_fg_fft = []
         for inj in X_inj:
-            inj = self.whitener[-1](inj[..., int(-(self.fft_kernel_length+self.hparams.fduration)*self.hparams.sample_rate):], psds)
+            inj = self.resampler[-1](self.whitener[-1](inj[..., int(-(self.kernel_lengths[-1]+self.hparams.fduration)*self.hparams.sample_rate):], psds))
             freqs = torch.fft.rfftfreq(
                 inj.shape[-1], d=1 / self.hparams.sample_rate
             )
             inj = torch.fft.rfft(inj)
-            mask = freqs >= self.fft_high_pass
-            mask *= freqs <= self.fft_low_pass
+            mask = freqs >= self.high_passes[-1]
+            mask *= freqs <= self.low_passes[-1]
             inj = inj[:, :, mask]
             X_fg_fft.append(inj)
         
         X_fg_fft = torch.stack(X_fg_fft)
         
-        X_bg_fft = self.whitener[-1](X_bg[..., int(-(self.fft_kernel_length+self.hparams.fduration)*self.hparams.sample_rate):], psds)
+        X_bg_fft = self.whitener[-1](X_bg[..., int(-(self.kernel_lengths[-1]+self.hparams.fduration)*self.hparams.sample_rate):], psds)
         freqs = torch.fft.rfftfreq(
                 X_bg_fft.shape[-1], d=1 / self.hparams.sample_rate
         )
         X_bg_fft = torch.fft.rfft(X_bg_fft)
-        mask = freqs >= self.fft_high_pass
-        mask *= freqs <= self.fft_low_pass
+        mask = freqs >= self.high_passes[-1]
+        mask *= freqs <= self.low_passes[-1]
         X_bg_fft = X_bg_fft[..., mask]
         
         freqs = np.linspace(0, self.hparams.sample_rate/2, psds.shape[-1])
-        mask = freqs >= self.fft_high_pass
-        mask *= freqs <= self.fft_low_pass
+        mask = freqs >= self.high_passes[-1]
+        mask *= freqs <= self.low_passes[-1]
         asds = (psds[:, :, mask]**0.5 * 1e23).float()
         
         if asds.shape[-1] != X_fg_fft.shape[-1]:
@@ -248,7 +240,7 @@ class MultimodalMultibandDataset(SupervisedAframeDataset):
         bg = bg + (X_bg_bp,)
         fg = fg + (X_fg_bp,)
         template_samples = random.choices(self.templates, k = X_bg.shape[0])
-        for band, kl in enumerate(self.kernel_lengths[1:]):
+        for band, kl in enumerate(self.kernel_lengths[1:-1]):
             fraction = self.resample_rates[band+1]/self.hparams.sample_rate
             X_bg_bp = torch.stack([X_bg[i, :, width] for i, width in enumerate([template[band] for template in template_samples])])
             X_bg_bp = self.whitener[band+1](X_bg_bp, psds)
@@ -284,9 +276,8 @@ class MultimodalMultibandDataset(SupervisedAframeDataset):
         N = len(params[0])
         snrs = self.snr_sampler.sample((N,)).to(X.device)
         responses = self.projector(*params, snrs, psds[mask], **polarizations)
-        kernels = sample_kernels_MM(
-            responses, kernel_size=X.size(-1), signal_time = self.post_slice_signal_idx, 
-            min_kernel_size = self.min_kernel_size, offset = self.allowed_offset, filter_size = self.filter_size, coincident=True
+        kernels = sample_kernels(
+            responses, kernel_size=X.size(-1), coincident=True
         )
 
         # perform augmentations on the responses themselves,
@@ -313,17 +304,17 @@ class MultimodalMultibandDataset(SupervisedAframeDataset):
     @torch.no_grad()
     def augment(self, X, waveforms):
         batch = self.super_augment(X, waveforms)
-        X = self.whitener[-1](batch[0][..., int(-(self.fft_kernel_length+self.hparams.fduration)*self.hparams.sample_rate):], batch[2])
+        X = self.resampler[-1](self.whitener[-1](batch[0][..., int(-(self.kernel_lengths[-1]+self.hparams.fduration)*self.hparams.sample_rate):], batch[2]))
         X_fft = torch.fft.rfft(X)
         freqs = torch.fft.rfftfreq(
             X.shape[-1], d=1 / self.hparams.sample_rate
         )
-        mask = freqs >= self.fft_high_pass
-        mask *= freqs <= self.fft_low_pass
+        mask = freqs >= self.high_passes[-1]
+        mask *= freqs <= self.low_passes[-1]
         X_fft = X_fft[:, :, mask]
         freqs = np.linspace(0, self.hparams.sample_rate/2, batch[2].shape[-1])
-        mask = freqs >= self.fft_high_pass
-        mask *= freqs <= self.fft_low_pass
+        mask = freqs >= self.high_passes[-1]
+        mask *= freqs <= self.low_passes[-1]
         asds = (batch[2][:, :, mask]**0.5 * 1e23).float()
         if asds.shape[-1] != X_fft.shape[-1]:
             asds = F.interpolate(asds, size=(X_fft.shape[-1],), mode="linear", align_corners=False)
@@ -332,7 +323,7 @@ class MultimodalMultibandDataset(SupervisedAframeDataset):
         sliced_waveforms = batch[0][..., int(-(self.kernel_lengths[0]+self.hparams.fduration)*self.hparams.sample_rate):]
         X = X + (self.resampler[0](self.whitener[0](sliced_waveforms, batch[2])),)
         template_samples = random.choices(self.templates, k = self.hparams.batch_size)
-        for band, kl in enumerate(self.kernel_lengths[1:]):
+        for band, kl in enumerate(self.kernel_lengths[1:-1]):
             sliced_waveforms = torch.stack([batch[0][i, :, width] for i, width in enumerate([template[band] for template in template_samples])])
             X = X + (self.resampler[band+1](self.whitener[band+1](sliced_waveforms, batch[2])),)
         X = X + (X_fft,)

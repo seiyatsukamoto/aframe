@@ -32,17 +32,17 @@ class ExportParams(law.Task):
         default="TENSORRT",
         description="Platform to use for exporting model for inference",
     )
-    
-    resample_rates = luigi.ListParameter()
-    kernel_lengths = luigi.ListParameter()
-    high_passes = luigi.ListParameter()
-    low_passes = luigi.ListParameter()
-    inference_sampling_rates = luigi.ListParameter()
-    starting_offsets = luigi.ListParameter()
-    classes = luigi.ListParameter()
-    layers = luigi.ListParameter()
 
     model_type = luigi.Parameter(default="export")
+    if model_type ==  'mm_export':
+        resample_rates = luigi.ListParameter()
+        kernel_lengths = luigi.ListParameter()
+        high_passes = luigi.ListParameter()
+        low_passes = luigi.ListParameter()
+        inference_sampling_rates = luigi.ListParameter()
+        starting_offsets = luigi.ListParameter()
+        classes = luigi.ListParameter()
+        layers = luigi.ListParameter()
 
 @inherits(ExportParams)
 class ExportLocal(AframeSingularityTask):
