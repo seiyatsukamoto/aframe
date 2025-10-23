@@ -15,7 +15,6 @@ from ml4gw.transforms import SpectralDensity
 import random
 Tensor = torch.Tensor
 
-from train.kernel_sampler import sample_kernels_MM
 from typing import Callable, Optional, Union
 from collections.abc import Sequence
 
