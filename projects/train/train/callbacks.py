@@ -11,11 +11,12 @@ from lightning import pytorch as pl
 from lightning.pytorch.callbacks import Callback
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.utilities import grad_norm
+from lightning.pytorch.cli import SaveConfigCallback
 
 BOTO_RETRY_EXCEPTIONS = (ClientError, ConnectTimeoutError)
 
 
-class WandbSaveConfig(pl.cli.SaveConfigCallback):
+class WandbSaveConfig(SaveConfigCallback):
     """
     Override of `lightning.pytorch.cli.SaveConfigCallback` for use with WandB
     to ensure all the hyperparameters are logged to the WandB dashboard.
