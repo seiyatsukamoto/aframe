@@ -8,6 +8,7 @@ import s3fs
 import torch
 from botocore.exceptions import ClientError, ConnectTimeoutError
 from lightning import pytorch as pl
+from lightning.pytorch.cli import SaveConfigCallback
 from lightning.pytorch.callbacks import Callback
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.utilities import grad_norm
@@ -15,7 +16,7 @@ from lightning.pytorch.utilities import grad_norm
 BOTO_RETRY_EXCEPTIONS = (ClientError, ConnectTimeoutError)
 
 
-class WandbSaveConfig(pl.cli.SaveConfigCallback):
+class WandbSaveConfig(SaveConfigCallback):
     """
     Override of `lightning.pytorch.cli.SaveConfigCallback` for use with WandB
     to ensure all the hyperparameters are logged to the WandB dashboard.
@@ -57,7 +58,7 @@ class ModelCheckpoint(pl.callbacks.ModelCheckpoint):
             X = tuple(i.cpu() for i in X)
         else:
             X = X.cpu()
-        trace = torch.jit.trace(module.model.to("cpu"), X)
+        trace = torch.jit.trace(module.model.to("cpu"), (X,))
 
         save_dir = trainer.logger.save_dir
         if save_dir.startswith("s3://"):

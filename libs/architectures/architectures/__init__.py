@@ -6,3 +6,4 @@ from .supervised import (
     SupervisedSpectrogramDomainResNet,
     SupervisedTimeDomainResNet,
 )
+from .resnet_1d_no_fc import IntermediateMixing
