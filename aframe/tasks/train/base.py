@@ -9,7 +9,6 @@ from aframe.parameters import PathParameter
 from aframe.tasks.data import TrainingWaveforms, ValidationWaveforms
 from aframe.tasks.data.fetch import FetchTrain
 
-
 class TrainBaseParameters(law.Task):
     train_config = luigi.Parameter(
         default=Defaults.TRAIN,
@@ -74,7 +73,18 @@ class TrainBaseParameters(law.Task):
         "directory. If False, the waveforms will be simulated "
         "on-the-fly during training.",
     )
-
+    wandb_id = luigi.OptionalParameter(
+        default="",
+        description="run id of wandb in case of continuing a run",
+    )
+    wandb_resume = luigi.OptionalParameter(
+        default="allow",
+        description="Whether to never/allow/must continue a wandb run",
+    )
+    ckpt_path = PathParameter(
+        description="Path of checkpoint if continuing training",
+        default="",
+    )
 
 @inherits(TrainBaseParameters)
 class TrainBase(law.Task):
@@ -92,6 +102,9 @@ class TrainBase(law.Task):
         args.append("--trainer.logger+=WandbLogger")
         args.append("--trainer.logger.job_type=train")
         args.append(f"--trainer.logger.save_dir={self.run_dir}")
+        args.append(f"--trainer.logger.id={self.wandb_id}")
+        args.append(f"--trainer.logger.resume={self.wandb_resume}")
+        
 
         for key in ["name", "entity", "project", "group", "tags"]:
             value = getattr(wandb(), key)
@@ -126,6 +139,8 @@ class TrainBase(law.Task):
         args = [
             "--config",
             self.train_config,
+            "--ckpt_path",
+            str(self.ckpt_path),
             "--seed_everything",
             str(self.seed),
             f"--data.ifos=[{','.join(self.ifos)}]",

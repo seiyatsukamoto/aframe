@@ -9,7 +9,7 @@ import torch
 from export.snapshotter import add_streaming_input_preprocessor
 from utils.s3 import open_file
 
-
+import os
 def scale_model(model, instances):
     """
     Scale the model to the number of instances per GPU desired
@@ -105,6 +105,7 @@ def export(
             Key word arguments specific to the export platform
     """
 
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
     # load in the model graph
     logging.info("Initializing model graph")
 

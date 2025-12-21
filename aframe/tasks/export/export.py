@@ -33,7 +33,6 @@ class ExportParams(law.Task):
         description="Platform to use for exporting model for inference",
     )
 
-
 @inherits(ExportParams)
 class ExportLocal(AframeSingularityTask):
     def __init__(self, *args, **kwargs):
@@ -67,7 +66,6 @@ class ExportLocal(AframeSingularityTask):
         args.append("--batch_size=" + str(self.batch_size))
         args.append("--psd_length=" + str(self.psd_length))
         args.append("--streams_per_gpu=" + str(self.streams_per_gpu))
-        args.append("--platform=" + str(self.platform))
         return args
 
     def run(self):

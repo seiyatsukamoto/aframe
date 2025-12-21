@@ -26,7 +26,7 @@ class MultimodalMultibandMixing(SupervisedAframeDataset):
                  *args, 
                  **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.resample_rates = resample_rates #assumes that kernels read highest to lowest with last inde reserved for fft params
+        self.resample_rates = resample_rates #assumes that kernels read highest to lowest with last index reserved for fft params
         self.high_passes = high_passes
         self.low_passes = low_passes
         self.fft_kernel_size = fft_kernel_size
@@ -78,7 +78,7 @@ class MultimodalMultibandMixing(SupervisedAframeDataset):
         X_bg, X_inj, psds = super().build_val_batches(background, signals)
         X_fg_fft = []
         for inj in X_inj:
-            inj = self.resampler[-1](self.whitener[-1](inj[..., -(self.hparams.fduration+self.fft_kernel_size)*self.hparams.sample_rate:], psds))
+            inj = self.resampler[-1](self.whitener[-1](inj[..., int(-(self.hparams.fduration+self.fft_kernel_size)*self.hparams.sample_rate):], psds))
             freqs = torch.fft.rfftfreq(
                 inj.shape[-1], d=1 / self.hparams.sample_rate
             )
@@ -90,7 +90,7 @@ class MultimodalMultibandMixing(SupervisedAframeDataset):
         
         X_fg_fft = torch.stack(X_fg_fft)
         
-        X_bg_fft = self.resampler[-1](self.whitener[-1](X_bg[..., -(self.hparams.fduration+self.fft_kernel_size)*self.hparams.sample_rate:], psds))
+        X_bg_fft = self.resampler[-1](self.whitener[-1](X_bg[..., int(-(self.hparams.fduration+self.fft_kernel_size)*self.hparams.sample_rate):], psds))
         freqs = torch.fft.rfftfreq(
                 X_bg_fft.shape[-1], d=1 / self.hparams.sample_rate
         )
@@ -137,7 +137,7 @@ class MultimodalMultibandMixing(SupervisedAframeDataset):
     @torch.no_grad()
     def inject(self, X, waveforms):
         batch = super().inject(X, waveforms)
-        X = self.resampler[-1](self.whitener[-1](batch[0][..., -(self.hparams.fduration+self.fft_kernel_size)*self.hparams.sample_rate:], batch[2]))
+        X = self.resampler[-1](self.whitener[-1](batch[0][..., int(-(self.hparams.fduration+self.fft_kernel_size)*self.hparams.sample_rate):], batch[2]))
         X_fft = torch.fft.rfft(X)
         freqs = torch.fft.rfftfreq(
             X.shape[-1], d=1 / self.hparams.sample_rate

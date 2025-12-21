@@ -4,7 +4,6 @@ from train.callbacks import WandbSaveConfig
 from train.data import BaseAframeDataset
 from train.model import AframeBase
 
-
 class AframeCLI(LightningCLI):
     def __init__(self, *args, **kwargs):
         # hack into init to hardcode

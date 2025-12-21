@@ -22,7 +22,7 @@ from ml4gw.nn.norm import GroupNorm1DGetter, NormLayer
 class IntermediateMixing(SupervisedArchitecture):
     def __init__(
         self,
-        classes: list[int],
+        classes: int,
         num_ifos: int,
         sample_rate: float,
         kernel_length: float,

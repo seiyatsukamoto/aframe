@@ -8,6 +8,8 @@ from infer.main import infer
 from infer.postprocess import Postprocessor
 from utils.logging import configure_logging
 
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 def build_parser():
     parser = jsonargparse.ArgumentParser()

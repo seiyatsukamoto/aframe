@@ -1,8 +1,10 @@
 from typing import Callable, Optional, Tuple
+from collections.abc import Sequence
 
 import torch
 from ml4gw.transforms import SpectralDensity, Whiten
 from ml4gw.utils.slicing import unfold_windows
+import torchaudio.transforms as T
 
 Tensor = torch.Tensor
 
@@ -254,3 +256,115 @@ class MultiModalPreprocessor(torch.nn.Module):
         x_fft = torch.cat([x_fft.real, x_fft.imag, inv_asd], dim=1)
 
         return x, x_fft
+
+class MultiModalMixingPreprocessor(torch.nn.Module):
+    def __init__(
+        self,
+        resample_rates: Sequence[float], 
+        high_passes: Sequence[float], 
+        low_passes: Sequence[float],
+        fft_kernel_size: float,
+        kernel_length: float,
+        sample_rate: float,
+        inference_sampling_rate: float,
+        batch_size: int,
+        fduration: float,
+        fftlength: float,
+        highpass: Optional[float] = None,
+        lowpass: Optional[float] = None,
+    ) -> None:
+        super().__init__()
+        self.stride_size = int(sample_rate / inference_sampling_rate)
+        self.kernel_size = int(kernel_length * sample_rate)
+        strides = (batch_size - 1) * self.stride_size
+        fsize = int(fduration * sample_rate)
+        size = strides + self.kernel_size + fsize
+        length = size / sample_rate
+        self.psd_estimator = PsdEstimator(
+            length,
+            sample_rate,
+            fftlength=fftlength,
+            overlap=None,
+            average="median",
+            fast=highpass is not None,
+        )
+        whitener = []
+        for band in range(len(resample_rates)):
+            whitener.append(Whiten(
+                fduration,
+                sample_rate,
+                high_passes[band],
+                low_passes[band],
+            ))
+        self.whitener = torch.nn.ModuleList(whitener)
+        resampler = []
+        for band in range(len(resample_rates)):
+            resampler.append(T.Resample(sample_rate, resample_rates[band]))
+        self.resampler = torch.nn.ModuleList(resampler)
+        self.kernel_sizes = []
+        for rr in resample_rates[:-1]:
+            self.kernel_sizes.append(int(self.kernel_size*min(resample_rates)/rr))
+        self.kernel_sizes.append(int(fft_kernel_size*sample_rate))
+        freqs = torch.fft.rfftfreq(int(fft_kernel_size * sample_rate), d=1 / sample_rate)#This is poor wording from me. should be length since unit sec
+        self.freq_mask = torch.ones_like(freqs, dtype=torch.bool)
+        if highpass is not None:
+            self.freq_mask &= freqs >= highpass
+        if lowpass is not None:
+            self.freq_mask &= freqs <= lowpass
+    def forward(self, x: Tensor) -> Tensor:
+        if x.ndim == 3:
+            num_channels = x.size(1)
+        elif x.ndim == 2:
+            num_channels = x.size(0)
+        else:
+            raise ValueError(
+                "Expected input to be either 2 or 3 dimensional, "
+                "but found shape {}".format(x.shape)
+            )
+        x, psd = self.psd_estimator(x.double())
+        asd = psd**0.5
+        asd = asd.float()
+        asd = torch.nn.functional.interpolate(
+            asd.unsqueeze(0),
+            size=(len(self.freq_mask),),
+            mode="linear",
+        )
+        asd = asd[:, :, self.freq_mask]
+        asd *= 1e23
+        
+        whitened = self.whitener[0](x, psd)[..., int(self.kernel_size - self.kernel_sizes[0]):]
+        whitened = unfold_windows(whitened, self.kernel_sizes[0], self.stride_size)
+        whitened = whitened.reshape(-1, num_channels, self.kernel_sizes[0])
+        bs = whitened.shape[0]
+        whitened = whitened.reshape(bs*num_channels, self.kernel_sizes[0])
+        whitened = self.resampler[0](whitened).reshape(bs, num_channels, -1)
+        input_0 = whitened
+
+        whitened = self.whitener[1](x, psd)[..., int(self.kernel_size - self.kernel_sizes[1]):]
+        whitened = unfold_windows(whitened, self.kernel_sizes[1], self.stride_size)
+        whitened = whitened.reshape(-1, num_channels, self.kernel_sizes[1])
+        bs = whitened.shape[0]
+        whitened = whitened.reshape(bs*num_channels, self.kernel_sizes[1])
+        whitened = self.resampler[1](whitened).reshape(bs, num_channels, -1)
+        input_1 = whitened
+
+        whitened = self.whitener[2](x, psd)[..., int(self.kernel_size - self.kernel_sizes[2]):]
+        whitened = unfold_windows(whitened, self.kernel_sizes[2], self.stride_size)
+        whitened = whitened.reshape(-1, num_channels, self.kernel_sizes[2])
+        bs = whitened.shape[0]
+        whitened = whitened.reshape(bs*num_channels, self.kernel_sizes[2])
+        whitened = self.resampler[2](whitened).reshape(bs, num_channels, -1)
+        input_2 = whitened
+        
+        asd = asd.expand(whitened.shape[0], -1, -1)
+        inv_asd = 1 / asd
+        whitened = self.whitener[-1](x, psd)[..., int(self.kernel_size - self.kernel_sizes[-1]):]
+        whitened = unfold_windows(whitened, self.kernel_sizes[-1], self.stride_size)
+        whitened = whitened.reshape(-1, num_channels, self.kernel_sizes[-1])
+        bs = whitened.shape[0]
+        whitened = whitened.reshape(bs*num_channels, self.kernel_sizes[-1])
+        whitened = self.resampler[-1](whitened).reshape(bs, num_channels, -1)
+        x_fft = torch.fft.rfft(whitened, dim=-1)
+        x_fft = x_fft[:, :, self.freq_mask]
+        input_3 = torch.cat([x_fft.real, x_fft.imag, inv_asd], dim=1)
+        return input_0, input_1, input_2, input_3
