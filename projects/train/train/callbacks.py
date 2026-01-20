@@ -33,8 +33,8 @@ class WandbSaveConfig(SaveConfigCallback):
             # pop off unecessary trainer args
             config = self.config.as_dict()
             config.pop("trainer")
-            config.pop("ckpt_path", None)
-            config.pop("resume_from_checkpoint", None)
+#            config.pop("ckpt_path", None)
+#            config.pop("resume_from_checkpoint", None)
             wandb_logger.experiment.config.update(config)
 
 

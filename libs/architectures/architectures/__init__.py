@@ -7,3 +7,4 @@ from .supervised import (
     SupervisedTimeDomainResNet,
 )
 from .resnet_1d_no_fc import IntermediateMixing
+from .multiband import SupervisedMultibandResNet
