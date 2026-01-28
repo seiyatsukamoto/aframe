@@ -105,7 +105,7 @@ def export(
             Key word arguments specific to the export platform
     """
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     # load in the model graph
     logging.info("Initializing model graph")
 
