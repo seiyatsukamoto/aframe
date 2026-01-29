@@ -76,6 +76,24 @@ class AframeCLI(LightningCLI):
         )
 
         parser.link_arguments(
+            "data.init_args.sample_rate",
+            "data.init_args.bns_waveform_sampler.init_args.sample_rate",
+            apply_on="parse",
+        )
+
+        parser.link_arguments(
+            "data.init_args.fduration",
+            "data.init_args.bns_waveform_sampler.init_args.fduration",
+            apply_on="parse",
+        )
+
+        parser.link_arguments(
+            "data.init_args.ifos",
+            "data.init_args.bns_waveform_sampler.init_args.ifos",
+            apply_on="parse",
+        )
+        
+        parser.link_arguments(
             (
                 "model.init_args.metric.init_args.pool_length",
                 "data.init_args.valid_stride",

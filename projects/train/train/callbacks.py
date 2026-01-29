@@ -11,11 +11,12 @@ from lightning import pytorch as pl
 from lightning.pytorch.callbacks import Callback
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.utilities import grad_norm
+from lightning.pytorch.cli import SaveConfigCallback
 
 BOTO_RETRY_EXCEPTIONS = (ClientError, ConnectTimeoutError)
 
 
-class WandbSaveConfig(pl.cli.SaveConfigCallback):
+class WandbSaveConfig(SaveConfigCallback):
     """
     Override of `lightning.pytorch.cli.SaveConfigCallback` for use with WandB
     to ensure all the hyperparameters are logged to the WandB dashboard.
@@ -45,7 +46,8 @@ class ModelCheckpoint(pl.callbacks.ModelCheckpoint):
         device = pl_module.device
         # Handle the case of loading training waveforms from disk
         if trainer.datamodule.waveforms_from_disk:
-            [X], waveforms = next(iter(trainer.train_dataloader))
+            [X], bbh_waveforms, bns_waveforms = next(iter(trainer.train_dataloader))
+            waveforms = torch.concat((bbh_waveforms, bns_waveforms), dim = 0)
             X = X.to(device)
             waveforms = waveforms.to(device)
             X, y = trainer.datamodule.inject(X, waveforms)
@@ -84,7 +86,8 @@ class SaveAugmentedBatch(Callback):
             # build training batch by hand
             # Handle the case of loading training waveforms from disk
             if trainer.datamodule.waveforms_from_disk:
-                [X], waveforms = next(iter(trainer.train_dataloader))
+                [X], bbh_waveforms, bns_waveforms = next(iter(trainer.train_dataloader))
+                waveforms = torch.concat((bbh_waveforms, bns_waveforms), dim = 0)
                 X = X.to(device)
                 waveforms = waveforms.to(device)
                 X, y = trainer.datamodule.inject(X, waveforms)
@@ -98,12 +101,13 @@ class SaveAugmentedBatch(Callback):
                 X = (X,)
 
             # build val batch by hand
-            [background, _, _], [signals] = next(
+            [background, _, timeslide_idx], [bbh_signals], [bns_signals] = next(
                 iter(trainer.datamodule.val_dataloader())
             )
+            signals = torch.concat((bbh_signals, bns_signals), dim = 0)
             background = background.to(device)
             signals = signals.to(device)
-            X_bg, X_inj = trainer.datamodule.build_val_batches(
+            X_bg, X_inj, _ = trainer.datamodule.build_val_batches(
                 background, signals
             )
             # Make background and injected validation data into

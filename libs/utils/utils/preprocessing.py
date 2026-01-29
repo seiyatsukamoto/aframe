@@ -10,6 +10,9 @@ from ml4gw.transforms import (
     SingleQTransform,
 )
 from ml4gw.utils.slicing import unfold_windows
+from architectures.resnet_1d_autoencoder import ResNet1D_autoencoder
+from architectures.resnet_2d_autoencoder import ResNet2D_autoencoder
+Tensor = torch.Tensor
 
 
 class BackgroundSnapshotter(torch.nn.Module):
@@ -589,3 +592,117 @@ class TimeSpectrogramPreprocessor(torch.nn.Module):
 
         # first input is timeseries and second input is spectrogram
         return x[1], spec
+
+class MOEPreprocessor(torch.nn.Module):
+    """
+    Preprocess a batch of waveforms for multimodal training.
+    This includes whitening the time domain data and
+    calculating the frequency domain data
+    """
+
+    def __init__(
+        self,
+        kernel_length: float,
+        sample_rate: float,
+        inference_sampling_rate: float,
+        batch_size: int,
+        fduration: float,
+        fftlength: float,
+        q: float, 
+        spectrogram_shape: list[int, int], 
+        frange: list[float, float],
+        time_domain_length: float,
+        spectrogram_model: ResNet2D_autoencoder,
+        timedomain_model: ResNet1D_autoencoder,
+        spectrogram_ckpt: str,
+        timedomain_ckpt: str,
+        highpass: Optional[float] = None,
+        lowpass: Optional[float] = None,
+    ) -> None:
+        super().__init__()
+        self.spectrogram_shape = spectrogram_shape
+        self.frange = frange
+        self.q = q
+        self.time_domain_samples = int(-time_domain_length*self.sample_rate)
+        ckpt = torch.load(spectrogram_ckpt, map_location=torch.device('cpu'), weights_only = False)
+        state_dict = {k.replace('model.', '', 1): v for k, v in ckpt['state_dict'].items()}
+        spectrogram_model.load_state_dict(state_dict)
+        spectrogram_model.eval()
+        self.spectrogram_model = spectrogram_model
+        
+        ckpt = torch.load(timedomain_ckpt, map_location=torch.device('cpu'), weights_only = False)
+        state_dict = {k.replace('model.', '', 1): v for k, v in ckpt['state_dict'].items()}
+        timedomain_model.load_state_dict(state_dict)
+        timedomain_model.eval()
+        self.timedomain_model = timedomain_model
+        self.stride_size = int(sample_rate / inference_sampling_rate)
+        self.kernel_size = int(kernel_length * sample_rate)
+
+        self.qtransform = SingleQTransform(
+            duration=self.hparams.kernel_length,
+            sample_rate=self.hparams.sample_rate,
+            q=self.q,
+            spectrogram_shape=self.spectrogram_shape,
+            frange = self.frange,
+        )
+        
+        # do foreground length calculation in units of samples,
+        # then convert back to length to guard for intification
+        strides = (batch_size - 1) * self.stride_size
+        fsize = int(fduration * sample_rate)
+        size = strides + self.kernel_size + fsize
+        length = size / sample_rate
+        self.psd_estimator = PsdEstimator(
+            length,
+            sample_rate,
+            fftlength=fftlength,
+            overlap=None,
+            average="median",
+            fast=highpass is not None,
+        )
+        self.whitener = Whiten(fduration, sample_rate, highpass, lowpass)
+
+        freqs = torch.fft.rfftfreq(self.kernel_size, d=1 / sample_rate)
+        self.freq_mask = torch.ones_like(freqs, dtype=torch.bool)
+        if highpass is not None:
+            self.freq_mask &= freqs > highpass
+        if lowpass is not None:
+            self.freq_mask &= freqs < lowpass
+
+    def forward(self, x: Tensor) -> Tensor:
+        # Get the number of channels so we know how to
+        # reshape `x` appropriately after unfolding to
+        # ensure we have (batch, channels, time) shape
+        if x.ndim == 3:
+            num_channels = x.size(1)
+        elif x.ndim == 2:
+            num_channels = x.size(0)
+        else:
+            raise ValueError(
+                "Expected input to be either 2 or 3 dimensional, "
+                "but found shape {}".format(x.shape)
+            )
+
+        x, psd = self.psd_estimator(x.double())
+        whitened = self.whitener(x, psd)
+
+        x = x.float()
+
+        # unfold x and then put it into the expected shape.
+        # Note that if x has both signal and background
+        # batch elements, they will be interleaved along
+        # the batch dimension after unfolding
+        x = unfold_windows(whitened, self.kernel_size, self.stride_size)
+        x = x.reshape(-1, num_channels, self.kernel_size)
+        x_1 = self.timedomain_model.encoder(x[..., time_domain_samples:])
+        x_1 = self.timedomain_model.compress(x_1)
+        x_1 = x_1.flatten(start_dim=-2)
+        x = self.qtransform(x)
+        mins = torch.amin(x, dim = [2, 3], keepdim=True)
+        maxes = torch.amax(x, dim = [2, 3], keepdim=True)
+        x = (x-mins)/(maxes-mins).clamp_min(1e-8)
+        x_2 = self.spectrogram_model.encoder(x)
+        x_2 = self.spectrogram_model.compress(x_2)
+        x_2 = x_2.flatten(start_dim=-3)
+        x = torch.cat([x_1, x_2], dim=-1)
+        return x

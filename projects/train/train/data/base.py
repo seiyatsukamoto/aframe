@@ -191,7 +191,7 @@ class BaseAframeDataset(pl.LightningDataModule):
         self.init_logging(verbose)
         self.num_ifos = len(ifos)
         self.max_num_workers = max_num_workers
-        self.save_hyperparameters(ignore=["waveform_sampler"])
+        self.save_hyperparameters(ignore=["waveform_sampler", 'spectrogram_model', 'timedomain_model'])
 
         # Set up some of our data augmentation modules
         self.inverter = SignalInverter(0.5)
