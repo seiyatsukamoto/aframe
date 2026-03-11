@@ -71,7 +71,9 @@ class UpBasicBlock(nn.Module):
                 "Dilation > 1 not supported in BasicBlock"
             )
         if inplanes != planes:
-            self.up = nn.ConvTranspose1d(inplanes, planes, kernel_size=2, stride=2)
+            midplanes = (inplanes+planes)//2
+            self.up1 = nn.ConvTranspose1d(inplanes, midplanes, kernel_size=3, stride=2, padding=1, output_padding=1)
+            self.up2 = nn.ConvTranspose1d(midplanes, planes, kernel_size=3, stride=2, padding=1, output_padding=1)
         self.conv1 = convN(planes, planes, kernel_size)
         self.bn1 = norm_layer(planes)
         self.relu = nn.ReLU(inplace=True)
@@ -81,8 +83,9 @@ class UpBasicBlock(nn.Module):
         self.stride = stride
 
     def forward(self, x: Tensor) -> Tensor:
-        if hasattr(self, "up"):
-            x = self.up(x)
+        if hasattr(self, "up1"):
+            x = self.up1(x)
+            x = self.up2(x)
         identity = x
         x = self.conv1(x)
         x = self.bn1(x)
@@ -205,9 +208,9 @@ class ResNet1D_decoder(nn.Module):
         self.residual_layers = nn.ModuleList(residual_layers)
         self.conv1 = nn.ConvTranspose1d(in_channels=inplanes,
                                         out_channels=in_channels, #assuming num_ifos is t20
-                                        kernel_size=7,
+                                        kernel_size=15,
                                         stride=2,
-                                        padding=3,
+                                        padding=7,
                                         output_padding=1,
                                         bias=False,
                                        )

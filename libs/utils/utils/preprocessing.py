@@ -12,6 +12,7 @@ from ml4gw.transforms import (
 from ml4gw.utils.slicing import unfold_windows
 from architectures.resnet_1d_autoencoder import ResNet1D_autoencoder
 from architectures.resnet_2d_autoencoder import ResNet2D_autoencoder
+from typing import Optional
 Tensor = torch.Tensor
 
 

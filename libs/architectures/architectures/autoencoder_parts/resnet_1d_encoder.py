@@ -109,9 +109,9 @@ class ResNet1D_encoder(nn.Module):
         self.conv1 = nn.Conv1d(
             in_channels,
             self.inplanes,
-            kernel_size=7,
+            kernel_size=15,
             stride=2,
-            padding=3,
+            padding=7,
             bias=False,
         )
         self.bn1 = self._norm_layer(self.inplanes)
@@ -124,7 +124,7 @@ class ResNet1D_encoder(nn.Module):
                 block_size,
                 num_blocks,
                 kernel_size,
-                stride=4,
+                stride=2,
                 stride_type=stride,
             )
             residual_layers.append(layer)
@@ -166,23 +166,56 @@ class ResNet1D_encoder(nn.Module):
                 conv1(self.inplanes, planes * block.expansion, stride),
                 norm_layer(planes * block.expansion),
             )
+            downsample_1to1 = nn.Sequential(
+                conv1(planes * block.expansion, planes * block.expansion, stride),
+                norm_layer(planes * block.expansion),
+            )
 
         layers = []
-        layers.append(
-            block(
-                self.inplanes,
-                planes,
-                kernel_size,
-                stride,
-                downsample,
-                self.groups,
-                self.base_width,
-                previous_dilation,
-                norm_layer,
+        if self.inplanes != planes:
+            layers.append(
+                block(
+                    self.inplanes,
+                    planes,
+                    kernel_size,
+                    stride,
+                    downsample,
+                    self.groups,
+                    self.base_width,
+                    previous_dilation,
+                    norm_layer,
+                )
             )
-        )
-        self.inplanes = planes * block.expansion
-        for _ in range(1, blocks):
+            layers.append(
+                block(
+                    planes * block.expansion,
+                    planes * block.expansion,
+                    kernel_size,
+                    stride,
+                    downsample_1to1,
+                    self.groups,
+                    self.base_width,
+                    previous_dilation,
+                    norm_layer,
+                )
+            )
+            self.inplanes = planes * block.expansion * block.expansion
+        else:
+            layers.append(
+                block(
+                    self.inplanes,
+                    planes,
+                    kernel_size,
+                    stride,
+                    downsample,
+                    self.groups,
+                    self.base_width,
+                    previous_dilation,
+                    norm_layer,
+                )
+            )
+            self.inplanes = planes * block.expansion
+        for _ in range(len(layers), blocks):
             layers.append(
                 block(
                     self.inplanes,

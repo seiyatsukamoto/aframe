@@ -17,24 +17,31 @@ from train.metrics import get_timeslides
 from ml4gw.dataloading import Hdf5TimeSeriesDataset
 import lightning.pytorch as pl
 import ml4gw
+from ml4gw.transforms.decimator import Decimator
 class TimeDomainAutoencoderAframeDataset(SupervisedAframeDataset):
     def __init__(
         self,  
         bns_waveform_sampler: WaveformSampler,
-        time_domain_length: float,
         snr_target_ratio: float, 
+        schedule: list,
         *args, 
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.bns_waveform_sampler = bns_waveform_sampler
-        self.time_domain_length = time_domain_length
+        self.num_samples = int(int(schedule[-1][1])*self.hparams.sample_rate)
         self.snr_target_ratio = snr_target_ratio
+        self.schedule = torch.tensor(schedule, dtype=torch.int)
         torch.serialization.add_safe_globals([ml4gw.distributions.PowerLaw])
         torch.serialization.add_safe_globals([torch.distributions.transforms.AffineTransform])
         torch.serialization.add_safe_globals([torch.distributions.transforms.PowerTransform])
         torch.serialization.add_safe_globals([torch.distributions.uniform.Uniform])
         torch.serialization.add_safe_globals([ml4gw.distributions.Cosine])
+    
+    def build_transforms(self, *args, **kwargs):
+        super().build_transforms(*args, **kwargs)
+        self.decimator = Decimator(sample_rate=self.hparams.sample_rate,
+                              schedule=self.schedule)
     
     def setup(self, stage: str) -> None:
         world_size, rank = self.get_world_size_and_rank()
@@ -299,17 +306,20 @@ class TimeDomainAutoencoderAframeDataset(SupervisedAframeDataset):
         #end of super().build_val_batches
         
         X_bg = self.whitener(X_bg, psd)
-        X_bg = X_bg[..., int(-self.time_domain_length*self.hparams.sample_rate):]
+        X_bg = X_bg[..., -self.num_samples:]
+        X_bg = self.decimator(X_bg)
         
         # whiten each view of injections
         X_fg = []
         X_fg_target = []
         for inj, inj_target in zip(X_inj, X_target):
             inj = self.whitener(inj, psd)
-            inj = inj[..., int(-self.time_domain_length*self.hparams.sample_rate):]
+            inj = inj[..., -self.num_samples:]
+            inj = self.decimator(inj)
             X_fg.append(inj)
             inj_target = self.whitener(inj_target, psd)
-            inj_target = inj_target[..., int(-self.time_domain_length*self.hparams.sample_rate):]
+            inj_target = inj_target[..., -self.num_samples:]
+            inj_target = self.decimator(inj_target)
             X_fg_target.append(inj_target)
 
         X_fg = torch.stack(X_fg)
@@ -365,7 +375,9 @@ class TimeDomainAutoencoderAframeDataset(SupervisedAframeDataset):
         y[mask] += 1
         
         X = self.whitener(X, psds)
-        X = X[..., int(-self.time_domain_length*self.hparams.sample_rate):]
+        X = X[..., -self.num_samples:]
+        X = self.decimator(X)
         X_target = self.whitener(X_target, psds)
-        X_target = X_target[..., int(-self.time_domain_length*self.hparams.sample_rate):]
+        X_target = X_target[..., -self.num_samples:]
+        X_target = self.decimator(X_target)
         return X, X_target
