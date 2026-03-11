@@ -123,7 +123,7 @@ class SpectrogramAutoencoderAframeDataset(SupervisedAframeDataset):
         )
         dataloader = torch.utils.data.DataLoader(
             dataset,
-            num_workers=self.num_workers,
+            num_workers=1,
             pin_memory=pin_memory,
         )
 
@@ -150,7 +150,7 @@ class SpectrogramAutoencoderAframeDataset(SupervisedAframeDataset):
         )
         bbh_waveform_loader = torch.utils.data.DataLoader(
             bbh_waveform_loader,
-            num_workers=2,
+            num_workers=1,
             pin_memory=pin_memory,
             persistent_workers=True,
         )
@@ -176,7 +176,7 @@ class SpectrogramAutoencoderAframeDataset(SupervisedAframeDataset):
         )
         bns_waveform_loader = torch.utils.data.DataLoader(
             bns_waveform_loader,
-            num_workers=2,
+            num_workers=1,
             pin_memory=pin_memory,
             persistent_workers=True,
         )
