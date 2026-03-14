@@ -84,7 +84,6 @@ class ResNet1D_encoder(nn.Module):
         self,
         in_channels: int,
         layers: list[int],
-        classes: int,
         kernel_size: int = 3,
         zero_init_residual: bool = False,
         groups: int = 1,
@@ -109,9 +108,9 @@ class ResNet1D_encoder(nn.Module):
         self.conv1 = nn.Conv1d(
             in_channels,
             self.inplanes,
-            kernel_size=15,
+            kernel_size=kernel_size,
             stride=2,
-            padding=7,
+            padding=kernel_size//2,
             bias=False,
         )
         self.bn1 = self._norm_layer(self.inplanes)

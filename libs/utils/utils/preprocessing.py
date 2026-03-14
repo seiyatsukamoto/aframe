@@ -13,6 +13,7 @@ from ml4gw.utils.slicing import unfold_windows
 from architectures.resnet_1d_autoencoder import ResNet1D_autoencoder
 from architectures.resnet_2d_autoencoder import ResNet2D_autoencoder
 from typing import Optional
+from ml4gw.transforms.decimator import Decimator
 Tensor = torch.Tensor
 
 
@@ -612,7 +613,7 @@ class MOEPreprocessor(torch.nn.Module):
         q: float, 
         spectrogram_shape: list[int, int], 
         frange: list[float, float],
-        time_domain_length: float,
+        schedule: list,
         spectrogram_model: ResNet2D_autoencoder,
         timedomain_model: ResNet1D_autoencoder,
         spectrogram_ckpt: str,
@@ -624,7 +625,11 @@ class MOEPreprocessor(torch.nn.Module):
         self.spectrogram_shape = spectrogram_shape
         self.frange = frange
         self.q = q
-        self.time_domain_samples = int(-time_domain_length*self.sample_rate)
+        self.num_samples = int(int(schedule[-1][1])*self.hparams.sample_rate)
+        self.schedule = torch.tensor(schedule, dtype=torch.int)
+        self.decimator = Decimator(sample_rate=self.hparams.sample_rate,
+                              schedule=self.schedule)
+        
         ckpt = torch.load(spectrogram_ckpt, map_location=torch.device('cpu'), weights_only = False)
         state_dict = {k.replace('model.', '', 1): v for k, v in ckpt['state_dict'].items()}
         spectrogram_model.load_state_dict(state_dict)
@@ -695,7 +700,8 @@ class MOEPreprocessor(torch.nn.Module):
         # the batch dimension after unfolding
         x = unfold_windows(whitened, self.kernel_size, self.stride_size)
         x = x.reshape(-1, num_channels, self.kernel_size)
-        x_1 = self.timedomain_model.encoder(x[..., time_domain_samples:])
+        x_1 = self.decimator(x[..., -self.num_samples])
+        x_1 = self.timedomain_model.encoder(x_1)
         x_1 = self.timedomain_model.compress(x_1)
         x_1 = x_1.flatten(start_dim=-2)
         x = self.qtransform(x)

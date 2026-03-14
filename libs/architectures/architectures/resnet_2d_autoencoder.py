@@ -7,6 +7,7 @@ from ml4gw.nn.norm import GroupNorm2DGetter, NormLayer
 from architectures.autoencoder_parts.resnet_2d_encoder import ResNet2D_encoder
 from architectures.autoencoder_parts.resnet_2d_decoder import ResNet2D_decoder
 from architectures.supervised import SupervisedArchitecture
+import torch.nn.functional as F
 
 def convN(
     in_planes: int,
@@ -41,7 +42,6 @@ class ResNet2D_autoencoder(SupervisedArchitecture):
         self,
         in_channels: int,
         layers: list[int],
-        classes: int,
         kernel_size: int = 3,
         zero_init_residual: bool = False,
         groups: int = 1,
@@ -54,7 +54,6 @@ class ResNet2D_autoencoder(SupervisedArchitecture):
         super().__init__()
         self.encoder = ResNet2D_encoder(in_channels = in_channels,
                                         layers = layers,
-                                        classes = classes,
                                         kernel_size = kernel_size,
                                         zero_init_residual = zero_init_residual,
                                         groups = groups,
@@ -68,7 +67,6 @@ class ResNet2D_autoencoder(SupervisedArchitecture):
         self.decompress = convN(latent_size, inplanes * 2 ** (len(layers)-1), kernel_size)
         self.decoder = ResNet2D_decoder(in_channels = in_channels,
                                         layers = layers,
-                                        classes = classes,
                                         kernel_size = kernel_size,
                                         zero_init_residual = zero_init_residual,
                                         groups = groups,
@@ -90,6 +88,7 @@ class ResNet2D_autoencoder(SupervisedArchitecture):
         x = self.compress(x)
         x = self.decompress(x)
         x = self.decoder(x)
+        x = F.sigmoid(x)
         return x
 
     def forward(self, x: Tensor) -> Tensor:

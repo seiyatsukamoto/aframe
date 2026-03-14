@@ -72,8 +72,8 @@ class UpBasicBlock(nn.Module):
             )
         if inplanes != planes:
             midplanes = (inplanes+planes)//2
-            self.up1 = nn.ConvTranspose1d(inplanes, midplanes, kernel_size=3, stride=2, padding=1, output_padding=1)
-            self.up2 = nn.ConvTranspose1d(midplanes, planes, kernel_size=3, stride=2, padding=1, output_padding=1)
+            self.up1 = nn.ConvTranspose1d(inplanes, midplanes, kernel_size=4, stride=2, padding=1)
+            self.up2 = nn.ConvTranspose1d(midplanes, planes, kernel_size=4, stride=2, padding=1)
         self.conv1 = convN(planes, planes, kernel_size)
         self.bn1 = norm_layer(planes)
         self.relu = nn.ReLU(inplace=True)
@@ -161,7 +161,6 @@ class ResNet1D_decoder(nn.Module):
         self,
         in_channels: int,
         layers: list[int],
-        classes: int,
         kernel_size: int = 3,
         zero_init_residual: bool = False,
         groups: int = 1,
@@ -208,9 +207,9 @@ class ResNet1D_decoder(nn.Module):
         self.residual_layers = nn.ModuleList(residual_layers)
         self.conv1 = nn.ConvTranspose1d(in_channels=inplanes,
                                         out_channels=in_channels, #assuming num_ifos is t20
-                                        kernel_size=15,
+                                        kernel_size=kernel_size,
                                         stride=2,
-                                        padding=7,
+                                        padding=kernel_size//2,
                                         output_padding=1,
                                         bias=False,
                                        )

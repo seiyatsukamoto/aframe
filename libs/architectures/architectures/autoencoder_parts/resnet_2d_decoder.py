@@ -71,7 +71,7 @@ class UpBasicBlock(nn.Module):
                 "Dilation > 1 not supported in BasicBlock"
             )
         if inplanes != planes:
-            self.up = nn.ConvTranspose2d(inplanes, planes, kernel_size=3, stride=2, padding=1, output_padding=1)
+            self.up = nn.ConvTranspose2d(inplanes, planes, kernel_size=2, stride=2)
         self.conv1 = convN(planes, planes, kernel_size)
         self.bn1 = norm_layer(planes)
         self.relu = nn.ReLU(inplace=True)
@@ -158,7 +158,6 @@ class ResNet2D_decoder(nn.Module):
         self,
         in_channels: int,
         layers: list[int],
-        classes: int,
         kernel_size: int = 3,
         zero_init_residual: bool = False,
         groups: int = 1,

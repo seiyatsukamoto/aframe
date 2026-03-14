@@ -20,7 +20,7 @@ class SupervisedSpectrogramAutoencoder(SupervisedAframe):
     def train_step(self, batch: tuple[Tensor, Tensor]) -> Tensor:
         X, X_target = batch
         y = self(X)
-        return torch.nn.functional.mse_loss(y, X_target)
+        return torch.nn.functional.l1_loss(y, X_target)
 
     def validation_step(self, batch, _) -> None:
         X_bg, X_fg, X_fg_target = batch

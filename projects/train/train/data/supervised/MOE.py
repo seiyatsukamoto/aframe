@@ -23,13 +23,14 @@ import lightning.pytorch as pl
 import ml4gw
 from architectures.resnet_1d_autoencoder import ResNet1D_autoencoder
 from architectures.resnet_2d_autoencoder import ResNet2D_autoencoder
+from ml4gw.transforms.decimator import Decimator
 class MOEAframeDataset(SupervisedAframeDataset):
     def __init__(
         self, 
         q: float, 
         spectrogram_shape: list[int, int], 
         frange: list[float, float],
-        time_domain_length: float,
+        schedule: list,
         spectrogram_model: ResNet2D_autoencoder,
         timedomain_model: ResNet1D_autoencoder,
         spectrogram_ckpt: str,
@@ -41,7 +42,8 @@ class MOEAframeDataset(SupervisedAframeDataset):
         self.spectrogram_shape = spectrogram_shape
         self.frange = frange
         self.q = q
-        self.time_domain_length = time_domain_length
+        self.num_samples = int(int(schedule[-1][1])*self.hparams.sample_rate)
+        self.schedule = torch.tensor(schedule, dtype=torch.int)
         
         torch.serialization.add_safe_globals([ml4gw.distributions.PowerLaw, torch.distributions.transforms.AffineTransform,
                                               torch.distributions.transforms.PowerTransform, torch.distributions.uniform.Uniform,
@@ -69,61 +71,22 @@ class MOEAframeDataset(SupervisedAframeDataset):
             spectrogram_shape=self.spectrogram_shape,
             frange = self.frange,
         )
+        self.decimator = Decimator(sample_rate=self.hparams.sample_rate,
+                              schedule=self.schedule)
     
     @torch.no_grad()
     def build_val_batches(self, background, signals):
-        sample_size = int(self.sample_length * self.hparams.sample_rate)
-        stride = int(self.hparams.valid_stride * self.hparams.sample_rate)
-        background = unfold_windows(background, sample_size, stride=stride)
-
-        # split data into kernel and psd data and estimate psd
-        X_bg, psd = self.psd_estimator(background)
-
-        # sometimes at the end of a segment, there won't be
-        # enough background kernels and so we'll have to inject
-        # our signals on overlapping data and ditch some at the end
-        step = int(len(X_bg) / len(signals))
-        if not step:
-            signals = signals[: len(X_bg)]
-        else:
-            X_bg = X_bg[::step][: len(signals)]
-            psd = psd[::step][: len(signals)]
-
-        # create `num_view` instances of the injection on top of
-        # the background, each showing a different, overlapping
-        # portion of the signal
-        kernel_size = X_bg.size(-1)
-        signal_idx = signals.shape[-1] - int(
-            self.waveform_sampler.right_pad * self.hparams.sample_rate
-        )
-        max_start = int(signal_idx - self.left_pad_size)
-        max_stop = max_start + kernel_size
-        pad = max_stop - signals.size(-1)
-        if pad > 0:
-            signals = torch.nn.functional.pad(signals, [0, pad])
-
-        # Prevent division by zero if we want only
-        # a single validation view
-        if self.hparams.num_valid_views == 1:
-            step = 0
-        else:
-            step = kernel_size - self.left_pad_size - self.right_pad_size
-            step /= self.hparams.num_valid_views - 1
-
-        X_inj = []
-        for i in range(self.hparams.num_valid_views):
-            start = max_start - int(i * step)
-            stop = start + kernel_size
-            injected = X_bg + signals[:, :, int(start) : int(stop)]
-            X_inj.append(injected)
-        X_inj = torch.stack(X_inj)
-        #end of super().build_val_batches
+        X, X_inj, psd = super().build_val_batches(background, signals)
         
         X_bg = self.whitener(X_bg, psd)
-        X_bg_1 = self.timedomain_model.encoder(X_bg[..., int(-self.time_domain_length*self.hparams.sample_rate):])
+        X_bg_1 = self.decimator(X_bg[..., -self.num_samples:])
+        X_bg_1 = self.timedomain_model.encoder(X_bg_1)
         X_bg_1 = self.timedomain_model.compress(X_bg_1)
         X_bg_1 = X_bg_1.flatten(start_dim = -2)
         X_bg = self.qtransform(X_bg)
+        mins = torch.amin(X_bg, dim = [2, 3], keepdim=True)
+        maxes = torch.amax(X_bg, dim = [2, 3], keepdim=True)
+        X_bg = (X_bg-mins)/(maxes-mins).clamp_min(1e-8)
         X_bg_2 = self.spectrogram_model(X_bg)
         X_bg_2 = self.spectrogram_model.encoder(X_bg)
         X_bg_2 = self.spectrogram_model.compress(X_bg_2)
@@ -134,10 +97,14 @@ class MOEAframeDataset(SupervisedAframeDataset):
         X_fg = []
         for inj in X_inj:
             inj = self.whitener(inj, psd) 
-            inj_1 = self.timedomain_model.encoder(inj[..., int(-self.time_domain_length*self.hparams.sample_rate):])
+            inj_1 = self.decimator(inj[..., -self.num_samples:])
+            inj_1 = self.timedomain_model.encoder(inj_1)
             inj_1 = self.timedomain_model.compress(inj_1)
             inj_1 = inj_1.flatten(start_dim = -2)
             inj = self.qtransform(inj)
+            mins = torch.amin(inj, dim = [2, 3], keepdim=True)
+            maxes = torch.amax(inj, dim = [2, 3], keepdim=True)
+            inj = (inj-mins)/(maxes-mins).clamp_min(1e-8)
             inj_2 = self.spectrogram_model.encoder(inj)
             inj_2 = self.spectrogram_model.compress(inj_2)
             inj_2 = inj_2.flatten(start_dim=-3)
@@ -195,7 +162,8 @@ class MOEAframeDataset(SupervisedAframeDataset):
         y[mask] += 1
         
         X = self.whitener(X, psds)
-        X_1 = self.timedomain_model.encoder(X[..., int(-self.time_domain_length*self.hparams.sample_rate):])
+        X_1 = self.decimator(X[..., -self.num_samples:])
+        X_1 = self.timedomain_model.encoder(X_1)
         X_1 = self.timedomain_model.compress(X_1)
         X_1 = X_1.flatten(start_dim=-2)
         X = self.qtransform(X)

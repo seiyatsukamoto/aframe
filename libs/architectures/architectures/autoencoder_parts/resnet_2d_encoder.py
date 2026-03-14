@@ -84,7 +84,6 @@ class ResNet2D_encoder(nn.Module):
         self,
         in_channels: int,
         layers: list[int],
-        classes: int,
         kernel_size: int = 3,
         zero_init_residual: bool = False,
         groups: int = 1,
