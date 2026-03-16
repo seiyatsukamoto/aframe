@@ -76,7 +76,7 @@ class MOEAframeDataset(SupervisedAframeDataset):
     
     @torch.no_grad()
     def build_val_batches(self, background, signals):
-        X, X_inj, psd = super().build_val_batches(background, signals)
+        X_bg, X_inj, psd = super().build_val_batches(background, signals)
         
         X_bg = self.whitener(X_bg, psd)
         X_bg_1 = self.decimator(X_bg[..., -self.num_samples:])
