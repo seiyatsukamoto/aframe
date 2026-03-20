@@ -87,7 +87,6 @@ class MOEAframeDataset(SupervisedAframeDataset):
         mins = torch.amin(X_bg, dim = [2, 3], keepdim=True)
         maxes = torch.amax(X_bg, dim = [2, 3], keepdim=True)
         X_bg = (X_bg-mins)/(maxes-mins).clamp_min(1e-8)
-        X_bg_2 = self.spectrogram_model(X_bg)
         X_bg_2 = self.spectrogram_model.encoder(X_bg)
         X_bg_2 = self.spectrogram_model.compress(X_bg_2)
         X_bg_2 = X_bg_2.flatten(start_dim=-3)

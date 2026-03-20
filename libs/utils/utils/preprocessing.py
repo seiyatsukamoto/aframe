@@ -15,6 +15,8 @@ from architectures.resnet_2d_autoencoder import ResNet2D_autoencoder
 from typing import Optional
 from ml4gw.transforms.decimator import Decimator
 Tensor = torch.Tensor
+from ml4gw.nn.norm import GroupNorm1DGetter
+from ml4gw.nn.norm import GroupNorm2DGetter
 
 
 class BackgroundSnapshotter(torch.nn.Module):
@@ -622,12 +624,9 @@ class MOEPreprocessor(torch.nn.Module):
         lowpass: Optional[float] = None,
     ) -> None:
         super().__init__()
-        self.spectrogram_shape = spectrogram_shape
-        self.frange = frange
-        self.q = q
-        self.num_samples = int(int(schedule[-1][1])*self.hparams.sample_rate)
+        self.num_samples = int(int(schedule[-1][1])*sample_rate)
         self.schedule = torch.tensor(schedule, dtype=torch.int)
-        self.decimator = Decimator(sample_rate=self.hparams.sample_rate,
+        self.decimator = Decimator(sample_rate=sample_rate,
                               schedule=self.schedule)
         
         ckpt = torch.load(spectrogram_ckpt, map_location=torch.device('cpu'), weights_only = False)
@@ -645,11 +644,11 @@ class MOEPreprocessor(torch.nn.Module):
         self.kernel_size = int(kernel_length * sample_rate)
 
         self.qtransform = SingleQTransform(
-            duration=self.hparams.kernel_length,
-            sample_rate=self.hparams.sample_rate,
-            q=self.q,
-            spectrogram_shape=self.spectrogram_shape,
-            frange = self.frange,
+            duration=kernel_length,
+            sample_rate=sample_rate,
+            q=q,
+            spectrogram_shape=spectrogram_shape,
+            frange = frange,
         )
         
         # do foreground length calculation in units of samples,
@@ -700,7 +699,7 @@ class MOEPreprocessor(torch.nn.Module):
         # the batch dimension after unfolding
         x = unfold_windows(whitened, self.kernel_size, self.stride_size)
         x = x.reshape(-1, num_channels, self.kernel_size)
-        x_1 = self.decimator(x[..., -self.num_samples])
+        x_1 = self.decimator(x[..., -self.num_samples:])
         x_1 = self.timedomain_model.encoder(x_1)
         x_1 = self.timedomain_model.compress(x_1)
         x_1 = x_1.flatten(start_dim=-2)
