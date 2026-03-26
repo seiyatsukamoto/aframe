@@ -6,3 +6,4 @@ from .supervised import (
     SupervisedMultiModalAframe,
     SupervisedTimeSpectrogramAframe,
 )
+from .supervised_autoencoder import SupervisedAutoencoderAframe

@@ -7,3 +7,8 @@ from .supervised import (
     SupervisedTimeDomainResNet,
     SupervisedTimeSpectrogramResNet,
 )
+
+from .resnet_autoencoder import (
+    ResNet1D_autoencoder,
+    ResNet2D_autoencoder,
+    MLP)

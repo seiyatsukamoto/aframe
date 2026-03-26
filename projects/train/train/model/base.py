@@ -7,6 +7,7 @@ import torch
 from architectures import Architecture
 
 from train.metrics import TimeSlideAUROC
+from torchmetrics import Metric
 
 Tensor = torch.Tensor
 
@@ -35,7 +36,7 @@ class AframeBase(pl.LightningModule):
     def __init__(
         self,
         arch: Architecture,
-        metric: TimeSlideAUROC,
+        metric: Metric,
         learning_rate: float,
         pct_lr_ramp: float,
         weight_decay: float = 0.0,

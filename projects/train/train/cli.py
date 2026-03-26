@@ -56,7 +56,28 @@ class AframeCLI(LightningCLI):
             )
         except Exception:
             pass
-
+        
+        try:
+            parser.link_arguments(
+                "data.init_args.sample_rate",
+                "data.init_args.bns_waveform_sampler.init_args.sample_rate",
+                apply_on="parse",
+            )
+    
+            parser.link_arguments(
+                "data.init_args.fduration",
+                "data.init_args.bns_waveform_sampler.init_args.fduration",
+                apply_on="parse",
+            )
+    
+            parser.link_arguments(
+                "data.init_args.ifos",
+                "data.init_args.bns_waveform_sampler.init_args.ifos",
+                apply_on="parse",
+            )
+        except Exception:
+            pass
+        
         parser.link_arguments(
             "data.init_args.sample_rate",
             "data.init_args.waveform_sampler.init_args.sample_rate",
