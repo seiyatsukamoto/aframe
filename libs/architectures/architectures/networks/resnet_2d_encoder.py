@@ -115,6 +115,15 @@ class ResNet2D_encoder(nn.Module):
         )
         self.bn1 = self._norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(
+            self.inplanes,
+            self.inplanes,
+            kernel_size=7,
+            stride=2,
+            padding=3,
+            bias=False,
+        )
+        self.bn2 = self._norm_layer(self.inplanes)
         residual_layers = [self._make_layer(self.inplanes, layers[0], kernel_size)]
         it = zip(layers[1:], stride_type, strict=True)
         for i, (num_blocks, stride) in enumerate(it):
@@ -199,6 +208,9 @@ class ResNet2D_encoder(nn.Module):
     def _forward_impl(self, x: Tensor) -> Tensor:
         x = self.conv1(x)
         x = self.bn1(x)
+        x = self.relu(x)
+        x = self.conv2(x)
+        x = self.bn2(x)
         x = self.relu(x)
         for layer in self.residual_layers:
             x = layer(x)

@@ -13,6 +13,7 @@ from ml4gw.utils.slicing import unfold_windows
 from architectures import ResNet1D_autoencoder
 from architectures import ResNet2D_autoencoder
 from typing import Optional
+import torch.nn.functional as F
 
 class BackgroundSnapshotter(torch.nn.Module):
     """
@@ -696,14 +697,20 @@ class AutoencoderPreprocessor(torch.nn.Module):
         x = x.reshape(-1, num_channels, self.kernel_size)
         x_1 = self.decimator(x[..., -self.num_samples:])
         x_1 = self.timedomain_model.encoder(x_1)
-        x_1 = self.timedomain_model.compress(x_1)
-        x_1 = x_1.flatten(start_dim=-2)
+        x_1 = self.timedomain_model.compress1(x_1)
+        x_1 = F.relu(x_1)
+        B, C, W = x_1.size()
+        x_1 = x_1.view(B, C*W)
+        x_1 = self.timedomain_model.compress2(x_1)
         x = self.qtransform(x)
         mins = torch.amin(x, dim = [2, 3], keepdim=True)
         maxes = torch.amax(x, dim = [2, 3], keepdim=True)
         x = (x-mins)/(maxes-mins).clamp_min(1e-8)
         x_2 = self.spectrogram_model.encoder(x)
-        x_2 = self.spectrogram_model.compress(x_2)
-        x_2 = x_2.flatten(start_dim=-3)
+        x_2 = self.spectrogram_model.compress1(x_2)
+        x_2 = F.relu(x_2)
+        B, C, W, H = x_2.size()
+        x_2 = x_2.view(B, C*W*H)
+        x_2 = self.spectrogram_model.compress2(x_2)
         x = torch.cat([x_1, x_2], dim=-1)
         return x

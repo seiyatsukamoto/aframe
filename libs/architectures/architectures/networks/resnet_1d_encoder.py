@@ -108,13 +108,22 @@ class ResNet1D_encoder(nn.Module):
         self.conv1 = nn.Conv1d(
             in_channels,
             self.inplanes,
-            kernel_size=kernel_size,
+            kernel_size=kernel_size*2+1,
             stride=2,
             padding=kernel_size//2,
             bias=False,
         )
         self.bn1 = self._norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv1d(
+            self.inplanes,
+            self.inplanes,
+            kernel_size=kernel_size*2+1,
+            stride=2,
+            padding=kernel_size//2,
+            bias=False,
+        )
+        self.bn2 = self._norm_layer(self.inplanes)
         residual_layers = [self._make_layer(self.inplanes, layers[0], kernel_size)]
         it = zip(layers[1:], stride_type, strict=True)
         for i, (num_blocks, stride) in enumerate(it):
@@ -171,49 +180,20 @@ class ResNet1D_encoder(nn.Module):
             )
 
         layers = []
-        if self.inplanes != planes:
-            layers.append(
-                block(
-                    self.inplanes,
-                    planes,
-                    kernel_size,
-                    stride,
-                    downsample,
-                    self.groups,
-                    self.base_width,
-                    previous_dilation,
-                    norm_layer,
-                )
+        layers.append(
+            block(
+                self.inplanes,
+                planes,
+                kernel_size,
+                stride,
+                downsample,
+                self.groups,
+                self.base_width,
+                previous_dilation,
+                norm_layer,
             )
-            layers.append(
-                block(
-                    planes * block.expansion,
-                    planes * block.expansion,
-                    kernel_size,
-                    stride,
-                    downsample_1to1,
-                    self.groups,
-                    self.base_width,
-                    previous_dilation,
-                    norm_layer,
-                )
-            )
-            self.inplanes = planes * block.expansion * block.expansion
-        else:
-            layers.append(
-                block(
-                    self.inplanes,
-                    planes,
-                    kernel_size,
-                    stride,
-                    downsample,
-                    self.groups,
-                    self.base_width,
-                    previous_dilation,
-                    norm_layer,
-                )
-            )
-            self.inplanes = planes * block.expansion
+        )
+        self.inplanes = planes * block.expansion
         for _ in range(len(layers), blocks):
             layers.append(
                 block(
@@ -232,6 +212,9 @@ class ResNet1D_encoder(nn.Module):
     def _forward_impl(self, x: Tensor) -> Tensor:
         x = self.conv1(x)
         x = self.bn1(x)
+        x = self.relu(x)
+        x = self.conv2(x)
+        x = self.bn2(x)
         x = self.relu(x)
         for layer in self.residual_layers:
             x = layer(x)

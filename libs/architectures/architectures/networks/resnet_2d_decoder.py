@@ -101,57 +101,6 @@ class UpBasicBlock(nn.Module):
 
 
 class ResNet2D_decoder(nn.Module):
-    """2D ResNet architecture
-
-    Simple extension of ResNet with arbitrary kernel sizes
-    to support the longer timeseries used in BBH detection.
-
-    Args:
-        in_channels:
-            The number of channels in input tensor.
-        layers:
-            A list representing the number of residual
-            blocks to include in each "layer" of the
-            network. Total lasyers (e.g. 50 in ResNet50)
-            is ``2 + sum(layers) * factor``, where factor
-            is ``2`` for vanilla ``ResNet`` and ``3`` for
-            ``BottleneckResNet``.
-        kernel_size:
-            The size of the convolutional kernel to
-            use in all residual layers. _NOT_ the size
-            of the input kernel to the network, which
-            is determined at run-time.
-        zero_init_residual:
-            Flag indicating whether to initialize the
-            weights of the batch-norm layer in each block
-            to 0 so that residuals are initialized as
-            identities. Can improve training results.
-        groups:
-            Number of convolutional groups to use in all
-            layers. Grouped convolutions induce local
-            connections between feature maps at subsequent
-            layers rather than global. Generally won't
-            need this to be >1, and wil raise an error if
-            >1 when using vanilla ``ResNet``.
-        width_per_group:
-            Base width of each of the feature map groups,
-            which is scaled up by the typical expansion
-            factor at each layer of the network. Meaningless
-            for vanilla ``ResNet``.
-        stride_type:
-            Whether to achieve downsampling on the time axis
-            by strided or dilated convolutions for each layer.
-            If left as ``None``, strided convolutions will be
-            used at each layer. Otherwise, ``stride_type`` should
-            be one element shorter than ``layers`` and indicate either
-            ``stride`` or ``dilation`` for each layer after the first.
-        norm_groups:
-            The number of groups to use in GroupNorm layers
-            throughout the model. If left as ``-1``, the number
-            of groups will be equal to the number of channels,
-            making this equilavent to LayerNorm
-    """
-
     block = UpBasicBlock
 
     def __init__(
@@ -167,14 +116,10 @@ class ResNet2D_decoder(nn.Module):
         inplanes: int = 64,
     ) -> None:
         super().__init__()
-        # default to using InstanceNorm if no
-        # norm layer is provided explicitly
         self.inplanes = inplanes * 2 ** (len(layers)-1)
         self._norm_layer = norm_layer or GroupNorm2DGetter()
         self.dilation = 1
         if stride_type is None:
-            # each element in the tuple indicates if we should replace
-            # the stride with a dilated convolution instead
             stride_type = ["stride"] * (len(layers) - 1)
         if len(stride_type) != (len(layers) - 1):
             raise ValueError(
@@ -203,6 +148,16 @@ class ResNet2D_decoder(nn.Module):
         residual_layers.append(self._make_layer(inplanes, layers[0], kernel_size))
         self.residual_layers = nn.ModuleList(residual_layers)
         self.conv1 = nn.ConvTranspose2d(in_channels=inplanes,
+                                        out_channels=inplanes, 
+                                        kernel_size=7,
+                                        stride=2,
+                                        padding=3,
+                                        output_padding=1,
+                                        bias=False,
+                                       )
+        self.bn1 = self._norm_layer(self.inplanes)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.ConvTranspose2d(in_channels=inplanes,
                                         out_channels=in_channels, 
                                         kernel_size=7,
                                         stride=2,
@@ -219,11 +174,6 @@ class ResNet2D_decoder(nn.Module):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
-        # Zero-initialize the last BN in each residual branch,
-        # so that the residual branch starts with zeros,
-        # and each residual block behaves like an identity.
-        # This improves the model by 0.2~0.3% according to
-        # https://arxiv.org/abs/1706.02677
         if zero_init_residual:
             for m in self.modules():
                 if isinstance(m, UpBasicBlock):
@@ -327,6 +277,9 @@ class ResNet2D_decoder(nn.Module):
         for layer in self.residual_layers:
             x = layer(x)
         x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.conv2(x)
         return x
 
     def forward(self, x: Tensor) -> Tensor:

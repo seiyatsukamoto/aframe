@@ -71,9 +71,7 @@ class UpBasicBlock(nn.Module):
                 "Dilation > 1 not supported in BasicBlock"
             )
         if inplanes != planes:
-            midplanes = (inplanes+planes)//2
-            self.up1 = nn.ConvTranspose1d(inplanes, midplanes, kernel_size=4, stride=2, padding=1)
-            self.up2 = nn.ConvTranspose1d(midplanes, planes, kernel_size=4, stride=2, padding=1)
+            self.up = nn.ConvTranspose1d(inplanes, planes, kernel_size=kernel_size, stride=2, padding=kernel_size//2, output_padding = 1)
         self.conv1 = convN(planes, planes, kernel_size)
         self.bn1 = norm_layer(planes)
         self.relu = nn.ReLU(inplace=True)
@@ -83,9 +81,8 @@ class UpBasicBlock(nn.Module):
         self.stride = stride
 
     def forward(self, x: Tensor) -> Tensor:
-        if hasattr(self, "up1"):
-            x = self.up1(x)
-            x = self.up2(x)
+        if hasattr(self, "up"):
+            x = self.up(x)
         identity = x
         x = self.conv1(x)
         x = self.bn1(x)
@@ -206,10 +203,20 @@ class ResNet1D_decoder(nn.Module):
         residual_layers.append(self._make_layer(inplanes, layers[0], kernel_size))
         self.residual_layers = nn.ModuleList(residual_layers)
         self.conv1 = nn.ConvTranspose1d(in_channels=inplanes,
-                                        out_channels=in_channels, #assuming num_ifos is t20
-                                        kernel_size=kernel_size,
+                                        out_channels=inplanes,
+                                        kernel_size=2*kernel_size+1,
                                         stride=2,
-                                        padding=kernel_size//2,
+                                        padding=kernel_size,
+                                        output_padding=1,
+                                        bias=False,
+                                       )
+        self.bn1 = self._norm_layer(self.inplanes)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.ConvTranspose1d(in_channels=inplanes,
+                                        out_channels=in_channels,
+                                        kernel_size=2*kernel_size+1,
+                                        stride=2,
+                                        padding=kernel_size,
                                         output_padding=1,
                                         bias=False,
                                        )
@@ -330,6 +337,9 @@ class ResNet1D_decoder(nn.Module):
         for layer in self.residual_layers:
             x = layer(x)
         x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.conv2(x)
         return x
 
     def forward(self, x: Tensor) -> Tensor:

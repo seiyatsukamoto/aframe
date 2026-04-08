@@ -67,7 +67,9 @@ class ResNet1D_autoencoder(SupervisedArchitecture):
         width_per_group: int = 64,
         stride_type: list[Literal["stride", "dilation"]] | None = None,
         norm_layer: NormLayer | None = None,
-        latent_size: int = 128,
+        latent_size: int = 2048,
+        latent_channels: int = 64,
+        input_size: int = 8196,
         inplanes: int = 64,
     ) -> None:
         super().__init__()
@@ -80,10 +82,19 @@ class ResNet1D_autoencoder(SupervisedArchitecture):
                                         stride_type = stride_type,
                                         norm_layer = norm_layer,
                                         inplanes=inplanes)
-        if latent_size < 0:
-            latent_size = inplanes * 2 ** (len(layers)-1)
-        self.compress = convN_1d(inplanes * 2 ** (len(layers)-1), latent_size, kernel_size)
-        self.decompress = convN_1d(latent_size, inplanes * 2 ** (len(layers)-1), kernel_size)
+        self.compress1 = convN_1d(inplanes * 2 ** (len(layers)-1), 
+                                  latent_channels, 
+                                  kernel_size=3,
+                                  stride=2)
+        self.compress2 = torch.nn.Linear(latent_channels*(input_size//(2**(len(layers)+2))), latent_size)
+        self.decompress1 = torch.nn.Linear(latent_size, latent_channels*(input_size//(2**(len(layers)+2))))
+        self.decompress2 = nn.ConvTranspose1d(latent_channels, 
+                                           inplanes * 2 ** (len(layers)-1), 
+                                           kernel_size=3,
+                                           stride=2,
+                                           padding=1, 
+                                           output_padding = 1, 
+                                           bias=False)
         self.decoder = ResNet1D_decoder(in_channels = in_channels,
                                         layers = layers,
                                         kernel_size = kernel_size,
@@ -104,9 +115,15 @@ class ResNet1D_autoencoder(SupervisedArchitecture):
 
     def _forward_impl(self, x: Tensor) -> Tensor:
         x = self.encoder(x)
-        x = self.compress(x)
-        x = self.decompress(x)
+        x = self.compress1(x)
         x = F.relu(x)
+        B, C, W = x.size()
+        x = x.view(B, C*W)
+        x = self.compress2(x)
+        x = self.decompress1(x)
+        x = F.relu(x)
+        x = x.view(B, C, W)
+        x = self.decompress2(x)
         x = self.decoder(x)
         return x
 
@@ -124,10 +141,13 @@ class ResNet2D_autoencoder(SupervisedArchitecture):
         width_per_group: int = 64,
         stride_type: list[Literal["stride", "dilation"]] | None = None,
         norm_layer: NormLayer | None = None,
-        latent_size: int = 128,
+        latent_size: int = 2048,
+        latent_channels: int = 64,
+        input_size: list[int, int] = [128, 256],
         inplanes: int = 64,
     ) -> None:
         super().__init__()
+        input_size = input_size[0]*input_size[1]
         self.encoder = ResNet2D_encoder(in_channels = in_channels,
                                         layers = layers,
                                         kernel_size = kernel_size,
@@ -137,10 +157,14 @@ class ResNet2D_autoencoder(SupervisedArchitecture):
                                         stride_type = stride_type,
                                         norm_layer = norm_layer,
                                         inplanes=inplanes)
-        if latent_size < 0:
-            latent_size = inplanes * 2 ** (len(layers)-1)
-        self.compress = convN_2d(inplanes * 2 ** (len(layers)-1), latent_size, kernel_size)
-        self.decompress = convN_2d(latent_size, inplanes * 2 ** (len(layers)-1), kernel_size)
+        self.compress1 = convN_2d(inplanes * 2 ** (len(layers)-1), 
+                                  latent_channels,
+                                  kernel_size=3)
+        self.compress2 = torch.nn.Linear(latent_channels*(input_size//(4**(len(layers)+1))), latent_size)
+        self.decompress1 = torch.nn.Linear(latent_size, latent_channels*(input_size//(4**(len(layers)+1))))
+        self.decompress2 = convN_2d(latent_channels,
+                                    inplanes * 2 ** (len(layers)-1), 
+                                    kernel_size=3)
         self.decoder = ResNet2D_decoder(in_channels = in_channels,
                                         layers = layers,
                                         kernel_size = kernel_size,
@@ -161,10 +185,17 @@ class ResNet2D_autoencoder(SupervisedArchitecture):
 
     def _forward_impl(self, x: Tensor) -> Tensor:
         x = self.encoder(x)
-        x = self.compress(x)
-        x = self.decompress(x)
+        x = self.compress1(x)
+        x = F.relu(x)
+        B, C, W, H = x.size()
+        x = x.view(B, C*W*H)
+        x = self.compress2(x)
+        x = self.decompress1(x)
+        x = F.relu(x)
+        x = x.view(B, C, W, H)
+        x = self.decompress2(x)
         x = self.decoder(x)
-        x = F.sigmoid(x) #Only do this for normalized inputs
+        x = F.sigmoid(x) #inputs are normalized
         return x
 
     def forward(self, x: Tensor) -> Tensor:
