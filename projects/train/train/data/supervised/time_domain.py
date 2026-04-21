@@ -5,7 +5,6 @@ from typing import Literal
 from train.data.supervised.supervised import SupervisedAframeDataset
 from ml4gw.transforms import Heterodyne
 
-
 class TimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
     def build_val_batches(self, background, signals):
         X_bg, X_inj, psds = super().build_val_batches(background, signals)
