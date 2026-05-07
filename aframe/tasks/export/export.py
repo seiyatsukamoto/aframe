@@ -73,7 +73,7 @@ class ExportLocal(AframeSingularityTask):
     def run(self):
         # Assuming a convention for batch file/model file
         # names and locations
-        weights = self.input().path
+        weights = '/home/seiya.tsukamoto/aframe/runs/heterodyne/bbh/training/muted.pt'
         weights_dir = os.path.dirname(weights)
         batch_file = weights_dir + "/batch.hdf5"
 
