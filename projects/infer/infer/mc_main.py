@@ -90,9 +90,11 @@ def infer(
     foreground = postprocessor(foreground_ts)
 
     logging.info("Recovering injections from foreground events")
-    
+
     for i in range(len(foreground)):
         foreground[i] = sequence.recover(foreground[i])
+
+    foreground[0].write('/home/seiya.tsukamoto/test.h5')
 
     logging.info(f"Finished processing sequence {sequence.id}")
     if return_timeseries:

@@ -121,11 +121,11 @@ class Infer(AframeSingularityTask):
         return "infer.sif"
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)#hardcoded 100 heterodyne chirpmasses 
-        self.foreground_output = [self.output_dir / f"foreground_{i}.hdf5" for i in range(100)]
-        self.background_output = [self.output_dir / f"background_{i}.hdf5" for i in range(100)]
-        self.zero_lag_output = [self.output_dir / f"0lag_{i}.hdf5" for i in range(100)]
-        self.timeseries_output = [self.output_dir / f"timeseries_{i}.hdf5" for i in range(100)]
+        super().__init__(*args, **kwargs)#hardcoded 10 heterodyne chirpmasses 
+        self.foreground_output = [self.output_dir / f"foreground_{i}.hdf5" for i in range(10)]
+        self.background_output = [self.output_dir / f"background_{i}.hdf5" for i in range(10)]
+        self.zero_lag_output = [self.output_dir / f"0lag_{i}.hdf5" for i in range(10)]
+        self.timeseries_output = [self.output_dir / f"timeseries_{i}.hdf5" for i in range(10)]
 
     def output(self): #idk how to fix this will just do file checking manualy
         output = {}
@@ -190,13 +190,13 @@ class Infer(AframeSingularityTask):
         """
         files = self.metadata_files
         num_files = len(files)
-        background_lengths = [np.zeros(num_files) for i in range(100)]
-        foreground_lengths = [np.zeros(num_files) for i in range(100)]
+        background_lengths = [np.zeros(num_files) for i in range(10)]
+        foreground_lengths = [np.zeros(num_files) for i in range(10)]
         shifts = np.zeros((num_files, len(self.shifts)))
         for i, f in enumerate(files):
             with open(f, "r") as f:
                 data = json.load(f)
-            for j in len(100):
+            for j in len(10):
                 background_lengths[j][i] = data["background_length"][j]
                 foreground_lengths[j][i] = data["foreground_length"][j]
             shifts[i] = data["shifts"]
@@ -244,12 +244,12 @@ class Infer(AframeSingularityTask):
 
         zero_lag_files = self.background_files[zero_lag]
         back_files = self.background_files[~zero_lag]
-        zero_lag_length = [sum(background_lengths[i][zero_lag]) for i in range(100)]
-        background_length = [sum(background_lengths[i][~zero_lag]) for i in range(100)]
-        foreground_length = [sum(foreground_lengths[i]) for i in range(100)]
-        foreground_mask = [foreground_lengths[i] > 0 for i in range(100)]
+        zero_lag_length = [sum(background_lengths[i][zero_lag]) for i in range(10)]
+        background_length = [sum(background_lengths[i][~zero_lag]) for i in range(10)]
+        foreground_length = [sum(foreground_lengths[i]) for i in range(10)]
+        foreground_mask = [foreground_lengths[i] > 0 for i in range(10)]
 
-        for i in range(100):
+        for i in range(10):
             logging.info("Aggregating background files")
             EventSet.aggregate(
                 back_files,

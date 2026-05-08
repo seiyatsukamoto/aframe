@@ -107,7 +107,8 @@ def export(
         **kwargs:
             Key word arguments specific to the export platform
     """
-
+    logging.info(f"Using {weights}")
+    
     # load in the model graph
     logging.info("Initializing model graph")
 

@@ -113,7 +113,7 @@ class Postprocessor:
         # just return an empty event set
         if y is None:
             return EventSet()
-        y = y[:, self.offset :]
+        y = [y[i][self.offset :] for i in range(10)]
         out = []
         for yi in y:
             yi = self.integrate(yi)

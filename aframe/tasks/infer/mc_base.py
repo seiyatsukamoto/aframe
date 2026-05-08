@@ -16,7 +16,6 @@ from aframe.parameters import PathParameter
 from aframe.tasks import ExportLocal, TestingWaveforms
 from aframe.tasks.data.condor.workflows import StaticMemoryWorkflow
 
-
 class InferParameters(law.Task):
     ifos = luigi.ListParameter()
     inference_sampling_rate = luigi.FloatParameter()
@@ -101,12 +100,16 @@ class InferBase(
 
     @property
     def foreground_output(self):
-        return self.tmp_dir / "foreground.hdf5"
+        out = [self.tmp_dir / f"foreground_{i}.hdf5" for i in range(10)]
+        out.append(self.tmp_dir / f"foreground.hdf5")
+        return out
 
     @property
     def background_output(self):
-        return self.tmp_dir / "background.hdf5"
-
+        out = [self.tmp_dir / f"background_{i}.hdf5" for i in range(10)]
+        out.append(self.tmp_dir / f"background.hdf5")
+        return out
+    
     @property
     def timeseries_output(self):
         return self.tmp_dir / "timeseries.hdf5"
@@ -253,16 +256,27 @@ class InferBase(
         else:
             background, foreground = outputs
 
-        background.write(self.background_output)
-        foreground.write(self.foreground_output)
+        for i in range(10):
+            background[i].write(self.background_output[i])
+            foreground[i].write(self.foreground_output[i])
+
+        with h5py.File(self.foreground_output[-1], "w") as out:
+            for i in range(10):
+                with h5py.File(self.foreground_output[i], "r") as f:
+                    f.copy("/", out, name=str(i))
+                    
+        with h5py.File(self.background_output[-1], "w") as out:
+            for i in range(10):
+                with h5py.File(self.background_output[i], "r") as f:
+                    f.copy("/", out, name=str(i))
 
         # Create metadata files to store key information.
         # Although this information is also contained in
         # the hdf5 files that get created, reading these
         # json files seems to be O(1000) times faster.
         metadata = {
-            "background_length": [len(background[i]) for i in range(100)],
-            "foreground_length": [len(foreground[i]) for i in range(100)],
+            "background_length": [len(background[i]) for i in range(10)],
+            "foreground_length": [len(foreground[i]) for i in range(10)],
             "shifts": shifts,
         }
         with open(self.metadata_output, "w") as f:

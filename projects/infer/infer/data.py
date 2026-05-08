@@ -109,13 +109,14 @@ class Sequence:
         # the inference response callback
         self._started = {}
         self._done = {}
-        self._sequences = {}
+        self._sequences = [{} for _ in range(10)]
         size = len(self) * self.batch_size
         for i in range(2):
             seq_id = self.id + i
             self._started[seq_id] = False
             self._done[seq_id] = False
-            self._sequences[seq_id] = np.zeros(size)
+            for j in range(10):
+                self._sequences[j][seq_id] = np.zeros(size)
 
         # if there are no injections, we can mark
         # the injection sequence as started and done
@@ -224,7 +225,8 @@ class Sequence:
         # spot in the corresponding output array
         start = request_id * self.batch_size
         stop = (request_id + 1) * self.batch_size
-        self._sequences[sequence_id][start:stop] = y[:, 0]
+        for i in range(10):
+            self._sequences[i][sequence_id][start:stop] = y[i, :, 0]
 
         # indicate that the first response for
         # this sequence has returned, and possibly
@@ -237,10 +239,10 @@ class Sequence:
         # sequences have completed, return them both,
         # slicing off the dummy data from the last batch
         if self.done:
-            background = self._sequences[self.id][self.slice]
+            background = [self._sequences[i][self.id][self.slice] for i in range(10)]
             foreground = None
             if self.injection_set is not None:
-                foreground = self._sequences[self.id + 1][self.slice]
+                foreground = [self._sequences[i][self.id + 1][self.slice] for i in range(10)]
             return background, foreground
 
     def recover(self, foreground: EventSet) -> RecoveredInjectionSet:

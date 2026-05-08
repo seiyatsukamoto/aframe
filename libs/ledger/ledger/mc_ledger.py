@@ -379,7 +379,7 @@ class Ledger:
 
             idx = 0
             for source in tqdm(_iter_open(files, "r", clean=clean)):
-                source = source[i]
+                source = source[str(i)]
                 source_length = source.attrs["length"]
                 if source_length == 0:
                     continue
