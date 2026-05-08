@@ -3,7 +3,7 @@ from architectures.supervised import SupervisedArchitecture
 
 from train.model.base import AframeBase
 from train.metrics import TimeSlideAUROC
-
+from train.load_balancing_loss import lb_loss_func
 Tensor = torch.Tensor
 
 
@@ -22,6 +22,24 @@ class SupervisedAframe(AframeBase):
     def score(self, X):
         return self(X)
 
+
+class SupervisedMOEAframe(AframeBase):
+    def __init__(self, arch: SupervisedArchitecture, k: int, num_experts: int, alpha: float, *args, **kwargs) -> None:
+        super().__init__(arch, *args, **kwargs)
+        self.num_experts = num_experts
+        self.k = k
+        self.alpha = alpha
+
+    def forward(self, X):
+        return self.model(X)
+
+    def train_step(self, batch: tuple[Tensor, Tensor]) -> Tensor:
+        X, y = batch
+        y_hat, gate_softmax = self(X)
+        return torch.nn.functional.binary_cross_entropy_with_logits(y_hat, y)+self.alpha*lb_loss_func(gate_softmax, self.num_experts, self.k)
+
+    def score(self, X):
+        return self(X)
 
 class SupervisedMultiModalAframe(SupervisedAframe):
     def __init__(self, arch: SupervisedArchitecture, *args, **kwargs) -> None:
