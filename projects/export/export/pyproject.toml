@@ -1,0 +1,58 @@
+[project]
+name = "export"
+version = "0.1.0"
+description = "Export aframe for IaaS inference"
+authors = [{ name = "Ethan Jacob Marx", email = "ethan.marx@ligo.org" }]
+requires-python = ">=3.10,<3.13"
+license = "MIT"
+dependencies = [
+    "ml4gw>=0.7.7",
+    "boto3~=1.30",
+    "fsspec[s3]>=2024,<2025",
+    "ml4gw-hermes[torch]>=0.2.1",
+    "aframe",
+    "utils",
+    "jsonargparse>=4.27.1,<5",
+    "nvidia-cudnn-cu12",
+    "tensorrt==9.3.0.post12.dev4",
+    "urllib3>=1.25.4,<1.27",
+    "train",
+    "torchmetrics>=0.11,<0.12",
+    "torch==2.5.0",
+    "lightning==2.2.1",
+    "wandb>=0.15",
+    "ray[default, tune]>=2.8.0,<3",
+    "ledger",
+    "priors",
+    "architectures",
+    "bayesian-optimization>=1.4.3,<2",
+    "filelock>=3.13.1,<4",
+    "s3fs>=2024,<2025",
+    "lightray>=0.2.3",
+]
+
+[project.scripts]
+export = "export.cli:main"
+export-model = "export.main:export"
+export-and-launch-triton = "export.remote:main"
+
+[dependency-groups]
+dev = ["pytest>=8.3.0,<9"]
+
+[tool.uv]
+
+[[tool.uv.index]]
+name = "torch"
+url = "https://download.pytorch.org/whl/cu121"
+explicit = true
+
+[tool.uv.sources]
+utils = { path = "../../libs/utils", editable = true }
+aframe = { path = "../..", editable = true }
+ledger = { path = "../../libs/ledger", editable = true }
+priors = { path = "../../libs/priors", editable = true }
+architectures = { path = "../../libs/architectures", editable = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

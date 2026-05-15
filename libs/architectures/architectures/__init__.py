@@ -8,3 +8,4 @@ from .supervised import (
     SupervisedTimeSpectrogramResNet,
     SupervisedHeterodyneTimeDomainResNet,
 )
+from .MOE import MOE_ResNet1D

@@ -36,10 +36,40 @@ class SupervisedMOEAframe(AframeBase):
     def train_step(self, batch: tuple[Tensor, Tensor]) -> Tensor:
         X, y = batch
         y_hat, gate_softmax = self(X)
-        return torch.nn.functional.binary_cross_entropy_with_logits(y_hat, y)+self.alpha*lb_loss_func(gate_softmax, self.num_experts, self.k)
+        return torch.nn.functional.binary_cross_entropy(y_hat, y)+self.alpha*lb_loss_func(gate_softmax, self.num_experts, self.k)
 
     def score(self, X):
         return self(X)
+
+    def validation_step(self, batch, _) -> None:
+        shift, X_bg, X_inj = batch
+
+        y_bg = self.score(X_bg)[0]
+
+        # compute predictions over multiple views of
+        # each injection and use their average as our
+        # prediction
+        num_views, batch, *shape = X_inj.shape
+        X_inj = X_inj.view(num_views * batch, *shape)
+        y_fg = self.score(X_inj)[0]
+        y_fg = y_fg.view(num_views, batch)
+        y_fg = y_fg.mean(0)
+
+        # include the shift associated with this data
+        # in our outputs to reconstruct background
+        # timeseries at aggregation time
+        self.metric.update(shift, y_bg, y_fg)
+
+        # lightning will take care of updating then
+        # computing the metric at the end of the
+        # validation epoch
+        self.log(
+            "valid_auroc",
+            self.metric,
+            on_step=True,
+            on_epoch=True,
+            sync_dist=True,
+        )
 
 class SupervisedMultiModalAframe(SupervisedAframe):
     def __init__(self, arch: SupervisedArchitecture, *args, **kwargs) -> None:

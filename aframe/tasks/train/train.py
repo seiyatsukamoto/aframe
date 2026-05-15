@@ -41,7 +41,7 @@ class TrainLocal(TrainBase, AframeSingularityTask):
 
         args = self.get_args()
         if len(self.gpus.split(",")) > 1:
-            args.append("--trainer.strategy=ddp")
+            args.append("--trainer.strategy=ddp_find_unused_parameters_true")
         cmd = [sys.executable, "-m", "train", "fit"] + args
         cmd_str = shlex.join(cmd)
         logger.info(f"Executing command {cmd_str}")

@@ -13,6 +13,10 @@ class AframeCLI(LightningCLI):
         kwargs["save_config_callback"] = WandbSaveConfig
         super().__init__(*args, **kwargs)
 
+    def before_fit(self):
+        print("Strategy:", self.trainer.strategy)
+        print("Devices:", self.trainer.device_ids)
+    
     def add_arguments_to_parser(self, parser):
         # link data arguments to model;
         # some models require information about

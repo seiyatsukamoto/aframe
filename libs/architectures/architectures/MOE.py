@@ -4,6 +4,7 @@ from typing import Literal
 import torch
 import torch.nn as nn
 from torch import Tensor
+from architectures.supervised import SupervisedArchitecture
 
 from ml4gw.nn.norm import GroupNorm1DGetter, NormLayer
 from ml4gw.nn.resnet.resnet_1d import convN, conv1, BasicBlock, Bottleneck
@@ -28,7 +29,7 @@ class gating(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         return self.gate(x)
     
-class MOE_ResNet1D(nn.Module):
+class MOE_ResNet1D(SupervisedArchitecture):
     """ 
     Multibranch Resnet with top k gating  
     Args:
@@ -59,7 +60,7 @@ class MOE_ResNet1D(nn.Module):
     ) -> None:
         super().__init__()
         
-        self.k = k
+        self.top_k = k
         self.inplanes = 64
         self.dilation = 1
 
@@ -201,11 +202,11 @@ class MOE_ResNet1D(nn.Module):
             x = layer(x)
 
         gate_scores = self.gating(x).squeeze(-1)
-        topk_probs, topk_indices = torch.topk(gate_scores, self.k, dim=1)
+        topk_probs, topk_indices = torch.topk(gate_scores, self.top_k, dim=1)
         topk_probs = self.softmax(topk_probs)
         
         batch_size = x.shape[0]
-        out = None
+        out = torch.zeros(batch_size, 1, device=x.device)
         for expert_idx, (expert_layers, fc) in enumerate(zip(self.experts, self.fc)):
             mask = (topk_indices == expert_idx).any(dim=1)
             if not mask.any():
@@ -216,17 +217,16 @@ class MOE_ResNet1D(nn.Module):
                 expert_x = layer(expert_x)
             
             expert_x = self.avgpool(expert_x).squeeze(-1)
-            expert_x = self.sigmoid(fc(expert_x))
+            expert_x = fc(expert_x)
             expert_weights = torch.zeros(batch_size, device=x.device)
-            for k_idx in range(self.k):
+            for k_idx in range(self.top_k):
                 slot_mask = (topk_indices[:, k_idx] == expert_idx)
                 expert_weights[slot_mask] = topk_probs[slot_mask, k_idx]
 
             weighted = expert_x * expert_weights[mask].unsqueeze(-1)
-            if out is None:
-                out = torch.zeros(batch_size, 1, device=x.device)
-            
             out[mask] += weighted
+        
+        out = self.sigmoid(out)
         return out, self.softmax(gate_scores)
     
     def forward(self, x: Tensor) -> Tensor:
