@@ -5,7 +5,7 @@ from typing import Literal
 from train.data.supervised.supervised import SupervisedAframeDataset
 from ml4gw.transforms import Heterodyne
 
-
+import numpy as np
 class TimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
     def build_val_batches(self, background, signals):
         X_bg, X_inj, psds = super().build_val_batches(background, signals)
@@ -49,22 +49,20 @@ class HeterodyneTimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
 
     def __init__(
         self,
-        chirp_mass_low: float = 1.0,
-        chirp_mass_high: float = 2.5,
-        num_chirp_masses: int = 100,
-        chirp_mass_spacing: Literal["linear", "log"] = "log",
+        chirp_mass_file: str,
         keep_last_n_seconds: float = None,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
 
-        self.chirp_mass_grid = self._create_chirp_mass_grid(
-            chirp_mass_low,
-            chirp_mass_high,
-            num_chirp_masses,
-            chirp_mass_spacing,
-        )
+        self.chirp_mass_grid = torch.Tensor(np.load(chirp_mass_file))
+        #self.chirp_mass_grid = self._create_chirp_mass_grid(
+        #    chirp_mass_low,
+        #    chirp_mass_high,
+        #    num_chirp_masses,
+        #    chirp_mass_spacing,
+        #)
 
         self.keep_last_n_seconds = keep_last_n_seconds
 
@@ -109,7 +107,7 @@ class HeterodyneTimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
         X_bg = self.whitener(X_bg, psds)
         X_bg = self.heterodyne_transform(X_bg)
         _B_bg, _C_bg, _M_bg, _T_bg = X_bg.shape
-        X_bg = X_bg.view(_B_bg, _C_bg * _M_bg, _T_bg)
+        X_bg = X_bg.reshape(_B_bg, _C_bg * _M_bg, _T_bg)
         # whiten each view of injections
         X_fg = []
         for inj in X_inj:
