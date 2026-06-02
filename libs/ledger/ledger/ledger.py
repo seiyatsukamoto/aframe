@@ -3,6 +3,7 @@ import warnings
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Union
 
 import h5py
 import numpy as np

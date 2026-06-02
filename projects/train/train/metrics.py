@@ -85,6 +85,58 @@ class TimeSlideAUROC(Metric):
         y = y[idx]
         return self.metric(y_pred, y)
 
+class TimeSlideVolume(Metric):
+    def __init__(
+        self, max_fpr: float, stride: float, pool_length: int, *args, **kwargs
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.metric = BinaryAUROC(max_fpr)
+        pool_size = int(pool_length / stride)
+        pool_stride = int(pool_size // 2)
+        self.pool = torch.nn.MaxPool1d(pool_size, pool_stride, ceil_mode=True)
+
+        self.add_state("shifts", default=[])
+        self.add_state("background", default=[])
+        self.add_state("foreground", default=[])
+
+    def update(
+        self, shift: int, background: torch.Tensor, foreground: torch.Tensor
+    ) -> None:
+        self.shifts.append(torch.Tensor([shift]).to(background.device))
+        self.background.append(background)
+        self.foreground.append(foreground)
+
+    def compute(self):
+        foreground, background = [], defaultdict(list)
+        for i, bg, fg in zip(
+            self.shifts, self.background, self.foreground, strict=True
+        ):
+            foreground.append(fg)
+            background[i.item()].append(bg)
+        foreground = torch.cat(foreground)
+
+        pooled_background = []
+        for bg in background.values():
+            bg = torch.cat(bg).view(1, 1, -1)
+            bg = self.pool(bg).view(-1)
+            pooled_background.append(bg)
+        background = torch.cat(pooled_background)
+
+        # concatenate these with view-averaged foreground
+        # predictions to constitute our predicted outputs
+        y_pred = torch.cat([background, foreground])
+
+        # now create ground-truth labels
+        y = torch.zeros_like(y_pred)
+        y[len(background) :] = 1
+
+        # shuffle the prediction and target arrays up
+        # front so that constant-output models don't
+        # accidently come out perfect
+        idx = torch.randperm(len(y_pred))
+        y_pred = y_pred[idx]
+        y = y[idx]
+        return self.metric(y_pred, y)
 
 class TimeSlide(torch.utils.data.IterableDataset):
     """

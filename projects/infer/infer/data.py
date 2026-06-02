@@ -69,7 +69,8 @@ class Sequence:
             self.sample_rate = 1 / dataset.attrs["dx"]
             self.t0 = dataset.attrs["x0"]
             self.duration = self.size / self.sample_rate
-
+            self.data = {ifo: f[ifo][:] for ifo in ifos}
+        
         # load in our injections up front
         # if there are no injections for
         # this shift, set it to None so
@@ -176,48 +177,47 @@ class Sequence:
         else:
             limiter = nullcontext()
 
-        with h5py.File(self.background_fname, "r") as f:
-            for i in range(len(self)):
-                # if this is the last batch, we may need to pad it
-                # to make it a full batch
-                last = i == len(self) - 1
-                # grab the current batch of updates from the file
-                # and stack it into a 2D array
-                x = []
-                for ifo, shift in zip(self.ifos, self.shifts, strict=True):
-                    start = shift + i * self.step_size
+        for i in range(len(self)):
+            # if this is the last batch, we may need to pad it
+            # to make it a full batch
+            last = i == len(self) - 1
+            # grab the current batch of updates from the file
+            # and stack it into a 2D array
+            x = []
+            for ifo, shift in zip(self.ifos, self.shifts, strict=True):
+                start = shift + i * self.step_size
 
-                    # for all but last batch just
-                    # increase by step size
-                    end = start + self.step_size
+                # for all but last batch just
+                # increase by step size
+                end = start + self.step_size
 
-                    # if this is the last batch
-                    # and we need to pad it
-                    # just step by the remainder
-                    if last and self.remainder:
-                        end = start + self.remainder
+                # if this is the last batch
+                # and we need to pad it
+                # just step by the remainder
+                if last and self.remainder:
+                    end = start + self.remainder
 
-                    data = f[ifo][start:end]
-                    # if this is the last batch
-                    # possibly pad it to make it a full batch
-                    if last:
-                        data = np.pad(data, (0, self.num_pad), "constant")
+                data = self.data[ifo][start:end]
+                # if this is the last batch
+                # possibly pad it to make it a full batch
+                if last:
+                    data = np.pad(data, (0, self.num_pad), "constant")
 
-                    x.append(data)
-                x = np.stack(x).astype(np.float32)
-                # if there are any injections for this shift,
-                # inject waveforms into a copy of the background
-                x_inj = None
-                offset = i * self.batch_size / self.inference_sampling_rate
-                if self.injection_set is not None:
-                    x_inj = self.injection_set.inject(
-                        x.copy(), self.t0 + offset
-                    )
+                x.append(data)
+            x = np.stack(x).astype(np.float32)
+            # if there are any injections for this shift,
+            # inject waveforms into a copy of the background
+            x_inj = None
+            offset = i * self.batch_size / self.inference_sampling_rate
+            if self.injection_set is not None:
+                x_inj = self.injection_set.inject(
+                    x.copy(), self.t0 + offset
+                )
 
-                # return the two sets of updates, possibly
-                # rate limited if we specified a max rate
-                with limiter:
-                    yield x, x_inj
+            # return the two sets of updates, possibly
+            # rate limited if we specified a max rate
+            with limiter:
+                yield x, x_inj
 
     def __call__(self, y, request_id, sequence_id):
         # insert the response at the appropriate
