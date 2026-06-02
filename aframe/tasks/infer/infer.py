@@ -147,6 +147,8 @@ class Infer(AframeSingularityTask):
             request_disk=self.request_disk,
             request_cpus=self.request_cpus,
             workflow=self.workflow,
+            rank=self.rank,
+            requirements=self.requirements,
             poll_interval=0.2,
         )
 

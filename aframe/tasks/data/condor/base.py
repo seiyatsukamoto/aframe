@@ -19,12 +19,16 @@ class LDGCondorWorkflow(htcondor.HTCondorWorkflow):
     request_disk = luigi.Parameter(default="1024 Kb")
     request_memory = luigi.Parameter(default="3267 Mb")
     request_cpus = luigi.IntParameter(default=1)
+    requirements = luigi.Parameter(default="")
+    rank = luigi.Parameter(default="")
 
     exclude_params_req = {
         "request_memory",
         "request_disk",
         "request_cpus",
         "condor_directory",
+        "requirements",
+        "rank",
         "workflow",
     }
 
@@ -130,4 +134,8 @@ class LDGCondorWorkflow(htcondor.HTCondorWorkflow):
         config.custom_content.append(("request_cpus", self.request_cpus))
         self.append_memory(config)
         self.append_logs(config)
+        if self.requirements:
+            config.custom_content.append(("requirements", self.requirements))
+        if self.rank:
+            config.custom_content.append(("rank", self.rank))
         return config
