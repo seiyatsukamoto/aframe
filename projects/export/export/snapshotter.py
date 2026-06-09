@@ -70,6 +70,12 @@ def add_streaming_input_preprocessor(
     if preproc_instances is not None:
         scale_model(preproc_model, preproc_instances)
 
+    from tritonclient.grpc.model_config_pb2 import ModelDynamicBatching
+    db = ModelDynamicBatching(
+        max_queue_delay_microseconds=1000,
+    )
+    preproc_model.config.dynamic_batching.CopyFrom(db)
+    
     input_shape = streaming_model.outputs["strain"].shape
     preproc_model.export_version(
         preprocessor,

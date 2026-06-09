@@ -58,7 +58,7 @@ def infer(
             sequence_start=sequence_start,
             sequence_end=sequence_end,
         )
-
+        
         if x_inj is not None:
             # pass injected data __and__ background
             # data to be used for whitening
@@ -69,7 +69,7 @@ def infer(
                 sequence_start=sequence_start,
                 sequence_end=sequence_end,
             )
-
+        
         # wait for the first response to come back
         # for both sequences to allow for some
         # warm up and to check to be sure we're not
@@ -78,7 +78,9 @@ def infer(
             while not sequence.started:
                 client.get()
                 time.sleep(1e-2)
-
+        else:
+            time.sleep(2e-1)
+    
     result = client.get()
     while result is None:
         result = client.get()

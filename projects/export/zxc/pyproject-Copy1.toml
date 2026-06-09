@@ -9,15 +9,14 @@ dependencies = [
     "ml4gw>=0.8.0",
     "boto3~=1.30",
     "fsspec[s3]>=2024,<2025",
-    "ml4gw-hermes[torch]>=0.2.1",
+    "ml4gw-hermes[torch]>=0.2.2",
+    "tensorrt-cu12==10.16.0.72",
     "aframe",
     "utils",
     "jsonargparse>=4.27.1,<5",
-    "nvidia-cudnn-cu11==8.9.6.50",
-    "tensorrt==8.5.2.2",
     "urllib3>=1.25.4,<1.27",
-    "torchaudio==2.5.0",
-    "torch==2.5.0"
+    "sniffio==1.3.1",
+    "torch==2.5.0",
 ]
 
 [project.scripts]
@@ -32,7 +31,7 @@ dev = ["pytest>=8.3.0,<9"]
 
 [[tool.uv.index]]
 name = "torch"
-url = "https://download.pytorch.org/whl/cu118"
+url = "https://download.pytorch.org/whl/cu121"
 explicit = true
 
 [tool.uv.sources]
