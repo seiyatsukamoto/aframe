@@ -140,7 +140,7 @@ class HeterodyneTimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
     def inject(self, X, waveforms=None):
         X, y, psds = super().inject(X, waveforms)
         X = self.whitener(X, psds)
-#        y = X.clone() #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        #y = X.clone() #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         X = self.heterodyne_transform(X)
         _B, _C, _M, _T = X.shape
         X = X.view(_B, _C * _M, _T)
@@ -186,6 +186,7 @@ class TopKHeterodyneTimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
         X_bg = self.heterodyne_transform(X_bg)
         _B_bg, _C_bg, _M_bg, _T_bg = X_bg.shape
         X_bg = X_bg.reshape(_B_bg, _C_bg * _M_bg, _T_bg)
+        X_bg = self.topk_bin(X_bg, _M_bg, _B_bg)
         # whiten each view of injections
         X_fg = []
         for inj in X_inj:
@@ -194,14 +195,16 @@ class TopKHeterodyneTimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
             X_fg.append(inj)
         X_fg = torch.stack(X_fg)
         _V_fg, _B_fg, _C_fg, _M_fg, _T_fg = X_fg.shape
-        X_fg = X_fg.view(_V_fg, _B_fg, _C_fg * _M_fg, _T_fg)
+        X_fg = X_fg.view(_V_fg*_B_fg, _C_fg * _M_fg, _T_fg)
+        X_fg = self.topk_bin(X_fg, _M_fg, _V_fg*_B_fg)
+        X_fg = X_fg.view(_V_fg, _B_fg, _C_fg * self.k, _T_fg)
 
         if self.keep_last_n_seconds is not None:
-            return X_bg[..., -self.keep_last_n_samples :], X_fg[
+            return X_bg[..., -self.keep_last_n_samples :].float(), X_fg[
                 ..., -self.keep_last_n_samples :
-            ]
+            ].float()
         else:
-            return X_bg, X_fg
+            return X_bg.float(), X_fg.float()
 
     def inject(self, X, waveforms=None):
         X, y, psds = super().inject(X, waveforms)
@@ -209,7 +212,13 @@ class TopKHeterodyneTimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
         X = self.heterodyne_transform(X)
         _B, _C, _M, _T = X.shape
         X = X.view(_B, _C * _M, _T)
+        X = self.topk_bin(X, _M, _B)
+        if self.keep_last_n_seconds is not None:
+            return X[..., -self.keep_last_n_samples :].float(), y
+        else:
+            return X.float(), y
 
+    def topk_bin(self, X, _M, _B):
         pooled = F.avg_pool1d(X.abs(), kernel_size = 31, stride = 5, padding = 0)
         
         h = torch.max(pooled[:, :_M], dim = -1)[0]
@@ -224,10 +233,6 @@ class TopKHeterodyneTimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
         h_l_hl = torch.stack([h, l, hl])
         
         idx = torch.argmin(torch.median(torch.stack([h, l, hl]), dim = -1)[0], dim = 0) # select which detector to use
-        pred = h_l_hl.topk(self.k, dim = -1)[1][idx, torch.arange(_B)] #do the topk using the 
+        pred = h_l_hl.topk(self.k, dim = -1)[1][idx, torch.arange(_B)] #do the topk using the idx
         pred = torch.concat([pred, pred+_M], dim = -1) #get both h and l channels
-        X = X[torch.arange(_B).unsqueeze(-1), pred]
-        if self.keep_last_n_seconds is not None:
-            return X[..., -self.keep_last_n_samples :], y
-        else:
-            return X, y
+        return X[torch.arange(_B).unsqueeze(-1), pred]

@@ -70,7 +70,7 @@ class SupervisedAframeDataset(BaseAframeDataset):
             # cases I'm not thinking of
             N = mask.sum().item()
             idx = torch.randperm(waveforms.shape[0])[:N] 
-            #idx = torch.arange(waveforms.shape[0]) #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            #idx = torch.arange(waveforms.shape[0]) #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             waveforms = waveforms[idx].to(X.device).float()
             hc, hp = waveforms[:, 0], waveforms[:, 1]
         else:
