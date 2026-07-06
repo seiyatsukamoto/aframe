@@ -233,7 +233,7 @@ class AframeSingularityTask(AframeSandboxTask):
     def singularity_args(self) -> Callable:
         def arg_getter():
             if self.gpus:
-                return ["--nv"]
+                return ["--nv", "--env", "PYTHONNOUSERSITE=1"]
             return []
 
         return arg_getter

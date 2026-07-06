@@ -168,6 +168,7 @@ def export(
         else [f"discriminator_{i}" for i in range(num_outputs)]
     )
 
+    print(input_shape_dict)
     aframe.export_version(
         graph,
         input_shapes=input_shape_dict,

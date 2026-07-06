@@ -113,7 +113,7 @@ class Infer(AframeSingularityTask):
     remove_tmpdir = luigi.BoolParameter(
         description="If `True`, remove directory where individual segment"
         " results are stored after aggregation. Defaults to `True`.",
-        default=True,
+        default=False, #!!!!!!!!!!!!!
     )
 
     @property

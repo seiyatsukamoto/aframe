@@ -12,8 +12,9 @@ readme = "README.md"
 license = "MIT"
 dependencies = [
     "torchmetrics>=0.11,<0.12",
-    "torch==2.5.0",
-    "lightning==2.2.1",
+    "torch==2.7.0",
+    "torchaudio==2.7.0",
+    "lightning==2.4.0",
     "jsonargparse[signatures]~=4.29",
     "wandb>=0.15",
     "bokeh~=3.0",
@@ -22,7 +23,7 @@ dependencies = [
     "fsspec[s3]>=2024,<2025",
     "urllib3>=1.25.4,<1.27",
     "utils",
-    "ml4gw>=0.7.11",
+    "ml4gw>=0.8.0",
     "aframe",
     "ledger",
     "priors",
@@ -30,7 +31,7 @@ dependencies = [
     "bayesian-optimization>=1.4.3,<2",
     "filelock>=3.13.1,<4",
     "s3fs>=2024,<2025",
-    "lightray>=0.2.3",
+    "lightray>=0.2.3"
 ]
 
 [project.scripts]
@@ -46,10 +47,12 @@ dev = [
 
 [[tool.uv.index]]
 name = "torch"
-url = "https://download.pytorch.org/whl/cu118"
+url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
 [tool.uv.sources]
+torch = { index = "torch" }  
+torchaudio = { index = "torch" }
 utils = { path = "../../libs/utils", editable = true }
 aframe = { path = "../..", editable = true }
 ledger = { path = "../../libs/ledger", editable = true }

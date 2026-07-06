@@ -24,6 +24,7 @@ class ExportParams(law.Task):
     psd_length = luigi.FloatParameter()
     highpass = luigi.FloatParameter()
     ifos = luigi.ListParameter()
+    num_outputs = luigi.OptionalIntParameter(default = 1)
     repository_directory = PathParameter(
         default=paths().results_dir / "model_repo"
     )
@@ -68,6 +69,7 @@ class ExportLocal(AframeSingularityTask):
         args.append("--psd_length=" + str(self.psd_length))
         args.append("--streams_per_gpu=" + str(self.streams_per_gpu))
         args.append("--platform=" + str(self.platform))
+        args.append("--num_outputs=" + str(self.num_outputs))
         return args
 
     def run(self):

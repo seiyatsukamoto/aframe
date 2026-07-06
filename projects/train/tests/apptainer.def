@@ -24,9 +24,9 @@ cd /opt/aframe/projects/train
 export UV_PROJECT_ENVIRONMENT=/opt/env
 
 # I think there might be a better way to do this
-uv export --frozen --all-extras -o requirements.txt
-uv pip sync requirements.txt --no-verify-hashes --index-strategy unsafe-best-match --system \
-    --extra-index-url https://download.pytorch.org/whl/cu128 \
+# uv export --frozen --all-extras -o requirements.txt
+# uv pip sync requirements.txt --system
+uv sync --frozen --all-extras
 
 %environment
 # Append venv dir to PATH so the 

@@ -38,6 +38,9 @@ class InferParameters(law.Task):
     return_timeseries = luigi.BoolParameter(default="false")
     output_dir = PathParameter(default=paths().results_dir)
     train_task = luigi.TaskParameter()
+    
+    output_shapes = luigi.OptionalDictParameter(default={"y": []}) 
+    kernel_length = luigi.FloatParameter() 
 
 
 @inherits(InferParameters)
@@ -218,6 +221,7 @@ class InferBase(
             shifts=shifts,
             background_fname=fname,
             injection_set_fname=self.injection_set_fname,
+            output_shapes={key: tuple(val) for key, val in self.output_shapes.items()}
         )
 
         postprocessor = Postprocessor(
@@ -228,6 +232,7 @@ class InferBase(
             fduration=self.fduration,
             t0=sequence.t0,
             shifts=shifts,
+            kernel_length = self.kernel_length
         )
 
         client = InferenceClient(
