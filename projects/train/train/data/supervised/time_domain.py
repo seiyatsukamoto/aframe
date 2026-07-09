@@ -4,7 +4,7 @@ from typing import Literal
 
 from train.data.supervised.supervised import SupervisedAframeDataset
 #from ml4gw.transforms import Heterodyne
-#from ml4gw.transforms import Heterodyne_from_dir as Heterodyne
+#from ml4gw.transforms.heterodyne_from_dir import Heterodyne_from_dir as Heterodyne
 from ml4gw.transforms.heterodyne_from_file import Heterodyne_from_file as Heterodyne
 
 import numpy as np
@@ -249,3 +249,188 @@ class TopKHeterodyneTimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
         pred = h_l_hl.topk(self.k, dim = -1)[1][idx, torch.arange(_B)] #do the topk using the idx
         pred = torch.concat([pred, pred+_M], dim = -1) #get both h and l channels
         return X[torch.arange(_B).unsqueeze(-1), pred]
+
+
+#class NeighborhoodTimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
+#    def __init__(
+#        self,
+#        phase_file: str,
+#        offsets: list[int],
+#        keep_last_n_seconds: float = None,
+#        *args,
+#        **kwargs,
+#    ):
+#        super().__init__(*args, **kwargs)
+#
+#        self.phase_file = phase_file
+#        self.offsets = torch.tensor(offsets)
+#        self.keep_last_n_seconds = keep_last_n_seconds
+#        if self.keep_last_n_seconds is not None:
+#            self.keep_last_n_samples = int(
+#                self.keep_last_n_seconds * self.hparams.sample_rate
+#            )
+#
+#    def build_transforms(self, *args, **kwargs):
+#        super().build_transforms(*args, **kwargs)
+#        self.heterodyne_transform = Heterodyne(
+#            sample_rate=self.hparams.sample_rate,
+#            kernel_length=self.hparams.kernel_length,
+#            chirp_mass_file=self.phase_file,
+#            return_type="time",
+#        )
+#    
+#    @torch.no_grad()
+#    def build_val_batches(self, background, signals):
+#        X_bg, X_inj, psds = super().build_val_batches(background, signals)
+#        X_bg = self.whitener(X_bg, psds)
+#        if self.keep_last_n_seconds is not None:
+#            X_bg_td = X_bg[..., -self.keep_last_n_samples :].float().clone()
+#        else:
+#            X_bg = X_bg.float().clone()
+#        
+#        X_bg = self.heterodyne_transform(X_bg)
+#        _B_bg, _C_bg, _M_bg, _T_bg = X_bg.shape
+#        X_bg = X_bg.reshape(_B_bg, _C_bg * _M_bg, _T_bg)
+#        X_bg = self.nbhd_bin(X_bg, _M_bg, _B_bg)
+#        # whiten each view of injections
+#        X_fg = []
+#        X_fg_td = []
+#        for inj in X_inj:
+#            inj = self.whitener(inj, psds)
+#            if self.keep_last_n_seconds is not None:
+#                X_fg_td.append(inj[..., -self.keep_last_n_samples :].float().clone())
+#            else:
+#                X_fg_td.append(inj.float().float().clone())
+#            inj = self.heterodyne_transform(inj)
+#            X_fg.append(inj)
+#        X_fg = torch.stack(X_fg)
+#        X_fg_td = torch.stack(X_fg_td)
+#        _V_fg, _B_fg, _C_fg, _M_fg, _T_fg = X_fg.shape
+#        X_fg = X_fg.view(_V_fg*_B_fg, _C_fg * _M_fg, _T_fg)
+#        X_fg = self.nbhd_bin(X_fg, _M_fg, _V_fg*_B_fg)
+#        X_fg = X_fg.view(_V_fg, _B_fg, _C_fg * len(self.offsets), _T_fg)
+#        if self.keep_last_n_seconds is not None:
+#            X_bg = X_bg[..., -self.keep_last_n_samples :].float()
+#            X_fg = X_fg[..., -self.keep_last_n_samples :].float()
+#        else:
+#            X_bg = X_bg.float()
+#            X_fg = X_fg.float()
+#        
+#        X_bg = torch.cat([X_bg_td[:, :1, :], X_bg[:, :len(self.offsets), :], X_bg_td[:, 1:, :], X_bg[:, len(self.offsets):, :]], dim=1)
+#        X_fg = torch.cat([X_fg_td[:, :, :1, :], X_fg[:, :, :len(self.offsets), :], X_fg_td[:, :, 1:, :], X_fg[:, :, len(self.offsets):, :]], dim=2)
+#        return X_bg, X_fg
+#    
+#    @torch.no_grad()
+#    def inject(self, X, waveforms=None):
+#        X, y, psds = super().inject(X, waveforms)
+#        X = self.whitener(X, psds)
+#        if self.keep_last_n_seconds is not None:
+#            X_td = X[..., -self.keep_last_n_samples :].float().clone()
+#        else:
+#            X_td = X.float().clone()
+#        
+#        X = self.heterodyne_transform(X)
+#        _B, _C, _M, _T = X.shape
+#        X = X.view(_B, _C * _M, _T)
+#        X = self.nbhd_bin(X, _M, _B)
+#        if self.keep_last_n_seconds is not None:
+#            X = X[..., -self.keep_last_n_samples :].float()
+#        else:
+#            X = X.float()
+#        
+#        return torch.cat([X_td[:, :1, :], X[:, :len(self.offsets), :], X_td[:, 1:, :], X[:, len(self.offsets):, :]], dim=1), y
+#    
+#    @torch.no_grad()
+#    def nbhd_bin(self, X, _M, _B):
+#        pooled = F.avg_pool1d(X.abs(), kernel_size = 31, stride = 5, padding = 0)
+#        
+#        hl = torch.max(pooled[:, :_M]*pooled[:, _M:], dim = -1)[0]
+#        idx = torch.argmax(hl, dim = -1)
+#        idx = idx.unsqueeze(1).repeat(1, 5)+self.offsets.to(idx.device)
+#        idx = torch.clip(idx, min=0, max=99)
+#        
+#        idx = torch.concat([idx, idx+_M], dim = -1) #get both h and l channels
+#        return X[torch.arange(_B).unsqueeze(-1), idx]
+
+
+
+class NeighborhoodTimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
+    def __init__(
+        self,
+        phase_file: str,
+        offsets: list[int],
+        keep_last_n_seconds: float = None,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+
+        self.phase_file = phase_file
+        self.offsets = torch.tensor(offsets)
+        self.keep_last_n_seconds = keep_last_n_seconds
+        if self.keep_last_n_seconds is not None:
+            self.keep_last_n_samples = int(
+                self.keep_last_n_seconds * self.hparams.sample_rate
+            )
+
+    def build_transforms(self, *args, **kwargs):
+        super().build_transforms(*args, **kwargs)
+        self.heterodyne_transform = Heterodyne(
+            sample_rate=self.hparams.sample_rate,
+            kernel_length=self.hparams.kernel_length,
+            chirp_mass_file=self.phase_file,
+            return_type="time",
+        )
+    
+    @torch.no_grad()
+    def build_val_batches(self, background, signals):
+        X_bg, X_inj, psds = super().build_val_batches(background, signals)
+        X_bg = self.whitener(X_bg, psds)
+        
+        X_bg = self.heterodyne_transform(X_bg)
+        _B_bg, _C_bg, _M_bg, _T_bg = X_bg.shape
+        X_bg = X_bg.reshape(_B_bg, _C_bg * _M_bg, _T_bg)
+        X_bg = self.nbhd_bin(X_bg, _M_bg, _B_bg)
+        # whiten each view of injections
+        X_fg = []
+        for inj in X_inj:
+            inj = self.whitener(inj, psds)
+            inj = self.heterodyne_transform(inj)
+            X_fg.append(inj)
+        X_fg = torch.stack(X_fg)
+        _V_fg, _B_fg, _C_fg, _M_fg, _T_fg = X_fg.shape
+        X_fg = X_fg.view(_V_fg*_B_fg, _C_fg * _M_fg, _T_fg)
+        X_fg = self.nbhd_bin(X_fg, _M_fg, _V_fg*_B_fg)
+        X_fg = X_fg.view(_V_fg, _B_fg, _C_fg * len(self.offsets), _T_fg)
+        if self.keep_last_n_seconds is not None:
+            return X_bg[..., -self.keep_last_n_samples :].float(), X_fg[
+                ..., -self.keep_last_n_samples :
+            ].float()
+        else:
+            return X_bg, X_fg
+    
+    @torch.no_grad()
+    def inject(self, X, waveforms=None):
+        X, y, psds = super().inject(X, waveforms)
+        X = self.whitener(X, psds)
+        
+        X = self.heterodyne_transform(X)
+        _B, _C, _M, _T = X.shape
+        X = X.view(_B, _C * _M, _T)
+        X = self.nbhd_bin(X, _M, _B)
+        if self.keep_last_n_seconds is not None:
+            return X[..., -self.keep_last_n_samples :].float(), y
+        else:
+            return X.float(), y
+    
+    @torch.no_grad()
+    def nbhd_bin(self, X, _M, _B):
+        pooled = F.avg_pool1d(X.abs(), kernel_size = 31, stride = 5, padding = 0)
+        
+        hl = torch.max(pooled[:, :_M]*pooled[:, _M:], dim = -1)[0]
+        idx = torch.argmax(hl, dim = -1)
+        idx = idx.unsqueeze(1).repeat(1, 5)+self.offsets.to(idx.device)
+        idx = torch.clip(idx, min=0, max=99)
+        
+        idx = torch.concat([idx, idx+_M], dim = -1) #get both h and l channels
+        return X[torch.arange(_B).unsqueeze(-1), idx]

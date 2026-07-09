@@ -4,7 +4,8 @@ from torch import Tensor
 from typing import Literal
 
 #from ml4gw.transforms import Heterodyne
-from ml4gw.transforms import Heterodyne_fromdir as Heterodyne
+#from ml4gw.transforms.heterodyne_from_dir import Heterodyne_from_dir as Heterodyne
+from ml4gw.transforms.heterodyne_from_file import Heterodyne_from_file as Heterodyne
 
 import torch.nn.functional as F
 
@@ -190,6 +191,59 @@ class TopkHeterodyneAugmentor(torch.nn.Module):
         x = self.heterodyne_transform(x)
         x = x.reshape(_B, _C * self.num_chirp_masses, _T)
         x = topk_bin(x, self.num_chirp_masses, _B)
+        x_heterodyned[:, :, :] = x
+        if self.keep_last_n_seconds is not None:
+            return x_heterodyned[..., -self.keep_last_n_samples :]
+        else:
+            return x_heterodyned
+
+
+class TopkHeterodyneAugmentor(torch.nn.Module):
+    def __init__(
+        self,
+        phase_file: str,
+        offsets: list[int],
+        keep_last_n_seconds: float = None,
+        sample_rate: float,
+        kernel_length: float,
+        num_chirp_masses: int,
+    ):
+        super().__init__()
+        self.sample_rate = sample_rate
+        self.kernel_length = kernel_length
+        self.offsets = offsets
+        self.keep_last_n_seconds = keep_last_n_seconds
+        self.phase_file = phase_file
+        self.num_chirp_masses = num_chirp_masses
+        if self.keep_last_n_seconds is not None:
+            self.keep_last_n_samples = int(
+                self.keep_last_n_seconds * sample_rate
+            )
+        
+        self.heterodyne_transform = Heterodyne(
+            sample_rate=self.hparams.sample_rate,
+            kernel_length=self.hparams.kernel_length,
+            chirp_mass_file=self.phase_file,
+            return_type="time",
+        )
+    
+    def nbhd_bin(self, X, _M, _B):
+        pooled = F.avg_pool1d(X.abs(), kernel_size = 31, stride = 5, padding = 0)
+        
+        hl = torch.max(pooled[:, :_M]*pooled[:, _M:], dim = -1)[0]
+        idx = torch.argmax(hl, dim = -1)
+        idx = idx.unsqueeze(1).repeat(1, 5)+self.offsets.to(idx.device)
+        idx = torch.clip(idx, min=0, max=99)
+        
+        idx = torch.concat([idx, idx+_M], dim = -1) #get both h and l channels
+        return X[torch.arange(_B).unsqueeze(-1), idx]
+    
+    def forward(self, x: Tensor) -> Tensor:
+        _B, _C, _T = x.shape
+        x_heterodyned = torch.empty((_B, _C * len(self.offsets), _T))
+        x = self.heterodyne_transform(x)
+        x = x.reshape(_B, _C * self.num_chirp_masses, _T)
+        x = self.nbhd_bin(x, self.num_chirp_masses, _B)
         x_heterodyned[:, :, :] = x
         if self.keep_last_n_seconds is not None:
             return x_heterodyned[..., -self.keep_last_n_samples :]
