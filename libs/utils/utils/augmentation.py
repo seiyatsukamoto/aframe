@@ -160,8 +160,8 @@ class TopkHeterodyneAugmentor(torch.nn.Module):
             )
 
         self.heterodyne_transform = Heterodyne(
-            sample_rate=self.hparams.sample_rate,
-            kernel_length=self.hparams.kernel_length,
+            sample_rate=self.sample_rate,
+            kernel_length=self.kernel_length,
             phase_dir=self.phase_dir,
             return_type="time",
         )
@@ -198,20 +198,20 @@ class TopkHeterodyneAugmentor(torch.nn.Module):
             return x_heterodyned
 
 
-class TopkHeterodyneAugmentor(torch.nn.Module):
+class NbhdHeterodyneAugmentor(torch.nn.Module):
     def __init__(
         self,
         phase_file: str,
         offsets: list[int],
-        keep_last_n_seconds: float = None,
         sample_rate: float,
         kernel_length: float,
         num_chirp_masses: int,
+        keep_last_n_seconds: float = None,
     ):
         super().__init__()
         self.sample_rate = sample_rate
         self.kernel_length = kernel_length
-        self.offsets = offsets
+        self.register_buffer("offsets", torch.tensor(offsets))
         self.keep_last_n_seconds = keep_last_n_seconds
         self.phase_file = phase_file
         self.num_chirp_masses = num_chirp_masses
@@ -221,8 +221,8 @@ class TopkHeterodyneAugmentor(torch.nn.Module):
             )
         
         self.heterodyne_transform = Heterodyne(
-            sample_rate=self.hparams.sample_rate,
-            kernel_length=self.hparams.kernel_length,
+            sample_rate=self.sample_rate,
+            kernel_length=self.kernel_length,
             chirp_mass_file=self.phase_file,
             return_type="time",
         )
@@ -232,7 +232,7 @@ class TopkHeterodyneAugmentor(torch.nn.Module):
         
         hl = torch.max(pooled[:, :_M]*pooled[:, _M:], dim = -1)[0]
         idx = torch.argmax(hl, dim = -1)
-        idx = idx.unsqueeze(1).repeat(1, 5)+self.offsets.to(idx.device)
+        idx = idx.unsqueeze(1).repeat(1, 5)+self.offsets
         idx = torch.clip(idx, min=0, max=99)
         
         idx = torch.concat([idx, idx+_M], dim = -1) #get both h and l channels
