@@ -11,7 +11,8 @@ from bokeh.layouts import gridplot
 from ledger.events import EventSet, RecoveredInjectionSet
 from ledger.injections import InjectionParameterSet
 from plots.legacy import compute, tools
-from plots.legacy.gwtc3 import main as gwtc3_pipeline_sv
+#from plots.legacy.gwtc3 import main as gwtc3_pipeline_sv
+from plots.legacy.gwtc5 import main as gwtc3_pipeline_sv
 from plots.vetos import VETO_CATEGORIES, VetoParser, get_catalog_vetos
 from priors.priors import log_normal_masses
 from utils.cosmology import DEFAULT_COSMOLOGY, get_astrophysical_volume

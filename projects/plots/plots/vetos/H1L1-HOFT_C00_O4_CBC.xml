@@ -1,0 +1,238 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE LIGO_LW SYSTEM "http://ldas-sw.ligo.caltech.edu/doc/ligolwAPI/html/ligolw_dtd.txt">
+<LIGO_LW>
+	<Table Name="process:table">
+		<Column Name="comment" Type="lstring"/>
+		<Column Name="cvs_entry_time" Type="int_4s"/>
+		<Column Name="cvs_repository" Type="lstring"/>
+		<Column Name="domain" Type="lstring"/>
+		<Column Name="end_time" Type="int_4s"/>
+		<Column Name="ifos" Type="lstring"/>
+		<Column Name="is_online" Type="int_4s"/>
+		<Column Name="jobid" Type="int_4s"/>
+		<Column Name="node" Type="lstring"/>
+		<Column Name="process_id" Type="int_8s"/>
+		<Column Name="program" Type="lstring"/>
+		<Column Name="start_time" Type="int_4s"/>
+		<Column Name="unix_procid" Type="int_4s"/>
+		<Column Name="username" Type="lstring"/>
+		<Column Name="version" Type="lstring"/>
+		<Stream Name="process:table" Delimiter="," Type="Local">
+			,,,,,,0,0,"ldas-grid",0,"ligolw-vetodef-create",1368541230,3678877,"laura.nuttall","0.1",
+			,,,,,,0,0,"ldas-grid",1,"ligolw-vetodef-append",1368555922,563601,"laura.nuttall","0.1",
+			,,,,,,0,0,"ldas-grid",2,"ligolw-vetodef-append",1368555936,564006,"laura.nuttall","0.1",
+			,,,,,,0,0,"ldas-grid",3,"ligolw-vetodef-append",1368555994,568717,"laura.nuttall","0.1",
+			,,,,,,0,0,"ldas-grid",4,"ligolw-vetodef-append",1368556009,568855,"laura.nuttall","0.1",
+			,,,,,,0,0,"ldas-grid",5,"ligolw-vetodef-append",1368556047,569264,"laura.nuttall","0.1",
+			,,,,,,0,0,"ldas-grid",6,"ligolw-vetodef-append",1368556084,569987,"laura.nuttall","0.1",
+			,,,,,,0,0,"ldas-pcdev2",7,"ligolw-vetodef-append",1370716864,226076,"derek.davis","0.1",
+			,,,,,,0,0,"ldas-pcdev2",8,"ligolw-vetodef-append",1370819134,63497,"derek.davis","0.1",
+			,,,,,,0,0,"ldas-pcdev2",9,"ligolw-vetodef-append",1370819186,65341,"derek.davis","0.1",
+			,,,,,,0,0,"ldas-pcdev2",10,"ligolw-vetodef-append",1376757117,179996,"derek.davis","0.1",
+			,,,,,,0,0,"ldas-pcdev3",11,"ligolw-vetodef-append",1383940930,4153699,"derek.davis","0.1",
+			,,,,,,0,0,"ldas-grid",12,"ligolw-vetodef-append",1391919540,2104945,"brennan.hughey","0.1",
+			,,,,,,0,0,"ldas-grid",13,"ligolw-vetodef-append",1391919541,2104961,"brennan.hughey","0.1",
+			,,,,,,0,0,"ldas-grid",14,"ligolw-vetodef-append",1391919541,2104977,"brennan.hughey","0.1",
+			,,,,,,0,0,"ldas-pcdev3",15,"ligolw-vetodef-append",1392079438,2010257,"derek.davis","0.1",
+			,,,,,,0,0,"ldas-pcdev3",16,"ligolw-vetodef-append",1402091082,3729054,"derek.davis","0.1"
+		</Stream>
+	</Table>
+	<Table Name="process_params:table">
+		<Column Name="param" Type="lstring"/>
+		<Column Name="process:process_id" Type="int_8s"/>
+		<Column Name="program" Type="lstring"/>
+		<Column Name="type" Type="lstring"/>
+		<Column Name="value" Type="lstring"/>
+		<Stream Name="process_params:table" Delimiter="," Type="Local">
+			"--output-file",0,"ligolw-vetodef-create","lstring","H1L1-HOFT_C00_O4_CBC.xml",
+			"--ifos",0,"ligolw-vetodef-create","lstring","H1,L1",
+			"--skip-process-tables",0,"ligolw-vetodef-create",,,
+			"--veto-definer-file",1,"ligolw-vetodef-append","lstring","H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",1,"ligolw-vetodef-append",,,
+			"--flag",1,"ligolw-vetodef-append","lstring","H1:DCS-MISSING_H1_HOFT_C00:1",
+			"--category",1,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",1,"ligolw-vetodef-append","int_8s","1366556418",
+			"--end-time",1,"ligolw-vetodef-append","int_8s","0",
+			"--start-pad",1,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",1,"ligolw-vetodef-append","int_8s","0",
+			"--comment",1,"ligolw-vetodef-append","lstring","Missing H1 calibrated h(t) data",
+			"--segment-url",1,"ligolw-vetodef-append","lstring","https://segments.ligo.org",
+			"--veto-definer-file",2,"ligolw-vetodef-append","lstring","H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",2,"ligolw-vetodef-append",,,
+			"--flag",2,"ligolw-vetodef-append","lstring","L1:DCS-MISSING_L1_HOFT_C00:1",
+			"--category",2,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",2,"ligolw-vetodef-append","int_8s","1366556418",
+			"--end-time",2,"ligolw-vetodef-append","int_8s","0",
+			"--start-pad",2,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",2,"ligolw-vetodef-append","int_8s","0",
+			"--comment",2,"ligolw-vetodef-append","lstring","Missing L1 calibrated h(t) data",
+			"--segment-url",2,"ligolw-vetodef-append","lstring","https://segments.ligo.org",
+			"--veto-definer-file",3,"ligolw-vetodef-append","lstring","H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",3,"ligolw-vetodef-append",,,
+			"--flag",3,"ligolw-vetodef-append","lstring","H1:DMT-INJECTION_STOCHASTIC:1",
+			"--category",3,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",3,"ligolw-vetodef-append","int_8s","1366556418",
+			"--end-time",3,"ligolw-vetodef-append","int_8s","0",
+			"--start-pad",3,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",3,"ligolw-vetodef-append","int_8s","0",
+			"--comment",3,"ligolw-vetodef-append","lstring","Stochastic hardware injections",
+			"--segment-url",3,"ligolw-vetodef-append","lstring","https://segments.ligo.org",
+			"--veto-definer-file",4,"ligolw-vetodef-append","lstring","H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",4,"ligolw-vetodef-append",,,
+			"--flag",4,"ligolw-vetodef-append","lstring","L1:DMT-INJECTION_STOCHASTIC:1",
+			"--category",4,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",4,"ligolw-vetodef-append","int_8s","1366556418",
+			"--end-time",4,"ligolw-vetodef-append","int_8s","0",
+			"--start-pad",4,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",4,"ligolw-vetodef-append","int_8s","0",
+			"--comment",4,"ligolw-vetodef-append","lstring","Stochastic hardware injections",
+			"--segment-url",4,"ligolw-vetodef-append","lstring","https://segments.ligo.org",
+			"--veto-definer-file",5,"ligolw-vetodef-append","lstring","H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",5,"ligolw-vetodef-append",,,
+			"--flag",5,"ligolw-vetodef-append","lstring","H1:DMT-INJECTION_DETCHAR:1",
+			"--category",5,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",5,"ligolw-vetodef-append","int_8s","1366556418",
+			"--end-time",5,"ligolw-vetodef-append","int_8s","0",
+			"--start-pad",5,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",5,"ligolw-vetodef-append","int_8s","0",
+			"--comment",5,"ligolw-vetodef-append","lstring","DetChar hardware injections",
+			"--segment-url",5,"ligolw-vetodef-append","lstring","https://segments.ligo.org",
+			"--veto-definer-file",6,"ligolw-vetodef-append","lstring","H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",6,"ligolw-vetodef-append",,,
+			"--flag",6,"ligolw-vetodef-append","lstring","L1:DMT-INJECTION_DETCHAR:1",
+			"--category",6,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",6,"ligolw-vetodef-append","int_8s","1366556418",
+			"--end-time",6,"ligolw-vetodef-append","int_8s","0",
+			"--start-pad",6,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",6,"ligolw-vetodef-append","int_8s","0",
+			"--comment",6,"ligolw-vetodef-append","lstring","DetChar hardware injections",
+			"--segment-url",6,"ligolw-vetodef-append","lstring","https://segments.ligo.org",
+			"--veto-definer-file",7,"ligolw-vetodef-append","lstring","cbc/O4/H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",7,"ligolw-vetodef-append",,,
+			"--flag",7,"ligolw-vetodef-append","lstring","H1:DCH-80KHZ_PI_MODE_29_HIGH:1",
+			"--category",7,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",7,"ligolw-vetodef-append","int_8s","1369771903",
+			"--end-time",7,"ligolw-vetodef-append","int_8s","1369772023",
+			"--start-pad",7,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",7,"ligolw-vetodef-append","int_8s","0",
+			"--comment",7,"ligolw-vetodef-append","lstring","Ring-up of PI mode 29, located near 80 kHz",
+			"--segment-url",7,"ligolw-vetodef-append","lstring","http://segments.ldas.cit",
+			"--veto-definer-file",8,"ligolw-vetodef-append","lstring","cbc/O4/H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",8,"ligolw-vetodef-append",,,
+			"--flag",8,"ligolw-vetodef-append","lstring","H1:DCH-OBS_INCORRECTLY_DEFINED:1",
+			"--category",8,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",8,"ligolw-vetodef-append","int_8s","1367712018",
+			"--end-time",8,"ligolw-vetodef-append","int_8s","1367798418",
+			"--start-pad",8,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",8,"ligolw-vetodef-append","int_8s","0",
+			"--comment",8,"ligolw-vetodef-append","lstring","segments when DMT-OBS_INTENT not defined May 10",
+			"--segment-url",8,"ligolw-vetodef-append","lstring","http://segments.ldas.cit",
+			"--veto-definer-file",9,"ligolw-vetodef-append","lstring","cbc/O4/H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",9,"ligolw-vetodef-append",,,
+			"--flag",9,"ligolw-vetodef-append","lstring","L1:DCH-OBS_INCORRECTLY_DEFINED:1",
+			"--category",9,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",9,"ligolw-vetodef-append","int_8s","1367798418",
+			"--end-time",9,"ligolw-vetodef-append","int_8s","1367884818",
+			"--start-pad",9,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",9,"ligolw-vetodef-append","int_8s","0",
+			"--comment",9,"ligolw-vetodef-append","lstring","segments when DMT-OBS_INTENT not defined May 11",
+			"--segment-url",9,"ligolw-vetodef-append","lstring","http://segments.ldas.cit",
+			"--veto-definer-file",10,"ligolw-vetodef-append","lstring","H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",10,"ligolw-vetodef-append",,,
+			"--flag",10,"ligolw-vetodef-append","lstring","H1:DCH-CAL_LINES_NOT_SUBTRACTED:1",
+			"--category",10,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",10,"ligolw-vetodef-append","int_8s","1370044818",
+			"--end-time",10,"ligolw-vetodef-append","int_8s","1376092818",
+			"--start-pad",10,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",10,"ligolw-vetodef-append","int_8s","0",
+			"--comment",10,"ligolw-vetodef-append","lstring","Times where the calibration lines are not correctly subtracted by the subtraction pipeline",
+			"--segment-url",10,"ligolw-vetodef-append","lstring","http://segments.ldas.cit",
+			"--veto-definer-file",11,"ligolw-vetodef-append","lstring","H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",11,"ligolw-vetodef-append",,,
+			"--flag",11,"ligolw-vetodef-append","lstring","L1:DCH-20KHZ_PI_MODE_5_HIGH:1",
+			"--category",11,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",11,"ligolw-vetodef-append","int_8s","1377262287",
+			"--end-time",11,"ligolw-vetodef-append","int_8s","1377262472",
+			"--start-pad",11,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",11,"ligolw-vetodef-append","int_8s","0",
+			"--comment",11,"ligolw-vetodef-append","lstring","Ring-up of PI mode 5 located near 24 kHz",
+			"--segment-url",11,"ligolw-vetodef-append","lstring","http://segments.ldas.cit",
+			"--veto-definer-file",12,"ligolw-vetodef-append","lstring","H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",12,"ligolw-vetodef-append",,,
+			"--flag",12,"ligolw-vetodef-append","lstring","H1:DCH-SQZ_ERROR_ADF_SERVO:1",
+			"--category",12,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",12,"ligolw-vetodef-append","int_8s","1387487358",
+			"--end-time",12,"ligolw-vetodef-append","int_8s","1387487958",
+			"--start-pad",12,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",12,"ligolw-vetodef-append","int_8s","0",
+			"--comment",12,"ligolw-vetodef-append","lstring","ADF servo caused an issue with squeezer performance",
+			"--segment-url",12,"ligolw-vetodef-append","lstring","http://segments.ldas.cit",
+			"--veto-definer-file",13,"ligolw-vetodef-append","lstring","H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",13,"ligolw-vetodef-append",,,
+			"--flag",13,"ligolw-vetodef-append","lstring","L1:DCH-CALIBRATION_ERROR_FROM_VIOLINMODES:1",
+			"--category",13,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",13,"ligolw-vetodef-append","int_8s","1388233979",
+			"--end-time",13,"ligolw-vetodef-append","int_8s","1388233982",
+			"--start-pad",13,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",13,"ligolw-vetodef-append","int_8s","0",
+			"--comment",13,"ligolw-vetodef-append","lstring","Violin mode ring-ups affected time-dependent calibration parameters",
+			"--segment-url",13,"ligolw-vetodef-append","lstring","http://segments.ldas.cit",
+			"--veto-definer-file",14,"ligolw-vetodef-append","lstring","H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",14,"ligolw-vetodef-append",,,
+			"--flag",14,"ligolw-vetodef-append","lstring","L1:DCH-VIOLIN_MODE6_RINGUP_TO_LOCKLOSS_DEC29:1",
+			"--category",14,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",14,"ligolw-vetodef-append","int_8s","1387905075",
+			"--end-time",14,"ligolw-vetodef-append","int_8s","1387905096",
+			"--start-pad",14,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",14,"ligolw-vetodef-append","int_8s","0",
+			"--comment",14,"ligolw-vetodef-append","lstring","Violin mode ringup disturbed DARM and caused lockloss",
+			"--segment-url",14,"ligolw-vetodef-append","lstring","http://segments.ldas.cit",
+			"--veto-definer-file",15,"ligolw-vetodef-append","lstring","H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",15,"ligolw-vetodef-append",,,
+			"--flag",15,"ligolw-vetodef-append","lstring","L1:DCH-CALIBRATION_LINE_SUBTRACTION_ERROR_NOV13:1",
+			"--category",15,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",15,"ligolw-vetodef-append","int_8s","1383936925",
+			"--end-time",15,"ligolw-vetodef-append","int_8s","1383937225",
+			"--start-pad",15,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",15,"ligolw-vetodef-append","int_8s","0",
+			"--comment",15,"ligolw-vetodef-append","lstring","Rapid turn on of calibration line subtraction biased estimates of the PSD",
+			"--segment-url",15,"ligolw-vetodef-append","lstring","https://segments.ligo.org",
+			"--veto-definer-file",16,"ligolw-vetodef-append","lstring","cbc/O4/H1L1-HOFT_C00_O4_CBC.xml",
+			"--skip-process-tables",16,"ligolw-vetodef-append",,,
+			"--flag",16,"ligolw-vetodef-append","lstring","L1:DCH-VIOLIN_MODE_RINGUP_JAN2:1",
+			"--category",16,"ligolw-vetodef-append","int_8s","1",
+			"--start-time",16,"ligolw-vetodef-append","int_8s","1388233698",
+			"--end-time",16,"ligolw-vetodef-append","int_8s","1388233982",
+			"--start-pad",16,"ligolw-vetodef-append","int_8s","0",
+			"--end-pad",16,"ligolw-vetodef-append","int_8s","0",
+			"--comment",16,"ligolw-vetodef-append","lstring","Extreme violin mode ring ups causing non-linear noise artifacts on Jan 2 2024",
+			"--segment-url",16,"ligolw-vetodef-append","lstring","http://segments.ldas.cit"
+		</Stream>
+	</Table>
+	<Table Name="veto_definer:table">
+		<Column Name="category" Type="int_4s"/>
+		<Column Name="comment" Type="lstring"/>
+		<Column Name="end_pad" Type="int_4s"/>
+		<Column Name="end_time" Type="int_4s"/>
+		<Column Name="ifo" Type="lstring"/>
+		<Column Name="name" Type="lstring"/>
+		<Column Name="process:process_id" Type="int_8s"/>
+		<Column Name="start_pad" Type="int_4s"/>
+		<Column Name="start_time" Type="int_4s"/>
+		<Column Name="version" Type="int_4s"/>
+		<Stream Name="veto_definer:table" Delimiter="," Type="Local">
+			1,"Missing H1 calibrated h(t) data",0,0,"H1","DCS-MISSING_H1_HOFT_C00",1,0,1366556418,1,
+			1,"Missing L1 calibrated h(t) data",0,0,"L1","DCS-MISSING_L1_HOFT_C00",2,0,1366556418,1,
+			1,"Ring-up of PI mode 29, located near 80 kHz",0,1378971945,"H1","DCH-80KHZ_PI_MODE_29_HIGH",7,0,1369771903,1,
+			1,"segments when DMT-OBS_INTENT not defined May 10",0,1367798418,"H1","DCH-OBS_INCORRECTLY_DEFINED",8,0,1367712018,1,
+			1,"segments when DMT-OBS_INTENT not defined May 11",0,1367884818,"L1","DCH-OBS_INCORRECTLY_DEFINED",9,0,1367798418,1,
+			1,"Times where the calibration lines are not correctly subtracted by the subtraction pipeline",0,1389456018,"H1","DCH-CAL_LINES_NOT_SUBTRACTED",10,0,1370044818,1,
+			1,"Ring-up of PI mode 5 located near 24 kHz",0,1377262472,"L1","DCH-20KHZ_PI_MODE_5_HIGH",11,0,1377262287,2,
+			1,"ADF servo caused an issue with squeezer performance",0,1387490418,"H1","DCH-SQZ_ERROR_ADF_SERVO",12,0,1387487358,1,
+			1,"Violin mode ring-ups affected time-dependent calibration parameters",0,1388233982,"L1","DCH-CALIBRATION_ERROR_FROM_VIOLINMODES",13,0,1388233979,1,
+			1,"Violin mode ringup disturbed DARM and caused lockloss",0,1387905096,"L1","DCH-VIOLIN_MODE6_RINGUP_TO_LOCKLOSS_DEC29",14,0,1387905075,1,
+			1,"Rapid turn on of calibration line subtraction biased estimates of the PSD",0,1383937225,"L1","DCH-CALIBRATION_LINE_SUBTRACTION_ERROR_NOV13",15,0,1383936925,1,
+			1,"Extreme violin mode ring ups causing non-linear noise artifacts on Jan 2 2024",0,1388233982,"L1","DCH-VIOLIN_MODE_RINGUP_JAN2",16,0,1388233638,2
+		</Stream>
+	</Table>
+</LIGO_LW>
