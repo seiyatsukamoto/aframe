@@ -3,6 +3,9 @@ import numpy as np
 from ledger.events import EventSet
 from collections.abc import Callable
 
+import torch.nn.functional as F
+import torch
+
 class Postprocessor:
     def __init__(
         self,
@@ -55,7 +58,20 @@ class Postprocessor:
         self.cluster_window_size = int(
             inference_sampling_rate * cluster_window_length
         )
-
+    
+    def median_pool(self, x):
+        x = torch.tensor(x).unsqueeze(0).unsqueeze(0).unsqueeze(0)
+        x = F.pad(x, (self.integration_window_size-1, 0))
+        x = F.unfold(x, kernel_size=(1, self.integration_window_size-1), 
+                stride=(1, 1), 
+                padding=(0, 0)
+            )
+        batch_size, _, total_windows = x.shape
+        channels = x.shape[1] // (self.integration_window_size-1)
+        x = x.view(batch_size, channels, (self.integration_window_size-1), total_windows)
+        median_values, _ = torch.median(x, dim=2)
+        return median_values.squeeze(0).squeeze(0).numpy()
+    
     def integrate(self, y: dict[str, np.ndarray]) -> np.ndarray:
         """
         Convolve predictions with boxcar filter
@@ -69,8 +85,11 @@ class Postprocessor:
         window_size = self.integration_window_size
         window = np.ones((window_size,)) / window_size
         for key in y.keys():
-            integrated = np.convolve(y[key], window, mode="full")
-            y[key] = integrated[: -window_size + 1]
+            if key == 'y':
+                integrated = np.convolve(y[key], window, mode="full")
+                y[key] = integrated[: -window_size + 1]
+            else:
+                y[key] = self.median_pool(y[key])
         return y
 
     def cluster(self, y) -> EventSet:

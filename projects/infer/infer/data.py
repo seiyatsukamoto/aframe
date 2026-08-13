@@ -229,11 +229,14 @@ class Sequence:
         # spot in the corresponding output array
         start = request_id * self.batch_size
         stop = (request_id + 1) * self.batch_size
-        for i, key in enumerate(self.output_shapes.keys()):
-            if len(self.output_shapes[key]) == 0:
-                self._sequences[sequence_id][key][start:stop] = output[f'discriminator_{i}'][:, 0]
-            else:
-                self._sequences[sequence_id][key][start:stop] = output[f'discriminator_{i}']
+        if len(self.output_shapes.keys()) == 1:
+            self._sequences[sequence_id][next(iter(self.output_shapes))][start:stop] = output[:, 0]
+        else:
+            for i, key in enumerate(self.output_shapes.keys()):
+                if len(self.output_shapes[key]) == 0:
+                    self._sequences[sequence_id][key][start:stop] = output[key][:, 0]
+                else:
+                    self._sequences[sequence_id][key][start:stop] = output[key]
 
         # indicate that the first response for
         # this sequence has returned, and possibly
@@ -247,7 +250,7 @@ class Sequence:
         # slicing off the dummy data from the last batch
         if self.done:
             background = {key: self._sequences[self.id][key][self.slice] for key in self.output_shapes.keys()}
-            foreground = {key: None for _ in self.output_shapes.keys()}
+            foreground = {key: None for key in self.output_shapes.keys()}
             if self.injection_set is not None:
                 foreground = {key: self._sequences[self.id + 1][key][self.slice] for key in self.output_shapes.keys()}
             return (

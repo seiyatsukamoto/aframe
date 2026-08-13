@@ -294,7 +294,10 @@ class RecoveredInjectionSet(EventSet, InterferometerResponseSet):
                 extra_params=evs.extra_params,
                 **kwargs,
             )
-            obj.append(subobj)
+            if len(obj) == 0:
+                obj = subobj
+            else:
+                obj.append(subobj)
 
         obj.Tb = events.Tb
         return obj

@@ -24,7 +24,6 @@ class ExportParams(law.Task):
     psd_length = luigi.FloatParameter()
     highpass = luigi.FloatParameter()
     ifos = luigi.ListParameter()
-    num_outputs = luigi.OptionalIntParameter(default = 1)
     repository_directory = PathParameter(
         default=paths().results_dir / "model_repo"
     )
@@ -33,6 +32,7 @@ class ExportParams(law.Task):
         default="TENSORRT",
         description="Platform to use for exporting model for inference",
     )
+    output_shapes = luigi.OptionalDictParameter(default={"y": []}) 
 
 
 @inherits(ExportParams)
@@ -69,7 +69,7 @@ class ExportLocal(AframeSingularityTask):
         args.append("--psd_length=" + str(self.psd_length))
         args.append("--streams_per_gpu=" + str(self.streams_per_gpu))
         args.append("--platform=" + str(self.platform))
-        args.append("--num_outputs=" + str(self.num_outputs))
+        args.append("--output_names=" + str([str(key) for key in self.output_shapes.keys()]))
         return args
 
     def run(self):
@@ -83,4 +83,5 @@ class ExportLocal(AframeSingularityTask):
         args.append("--weights=" + weights)
         args.append("--batch_file=" + batch_file)
         cmd = [sys.executable, "-m", "export"] + args
+        print(cmd)
         stream_command(cmd)

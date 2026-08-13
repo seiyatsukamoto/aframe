@@ -35,10 +35,10 @@ def export(
     psd_length: float,
     preprocessor: torch.nn.Module,
     streams_per_gpu: int = 1,
-    num_outputs: Optional[int] = 1,
     aframe_instances: Optional[int] = None,
     preproc_instances: Optional[int] = None,
     platform: qv.Platform = qv.Platform.TENSORRT,
+    output_names: list[str] = ['y'],
     clean: bool = False,
     verbose: bool = False,
     **kwargs,
@@ -89,8 +89,6 @@ def export(
         streams_per_gpu:
             The number of snapshot states to host per GPU during
             inference
-        num_outputs:
-            The number of neural network outputs. Default is set to 1
         aframe_instances:
             The number of concurrent execution instances of the
             aframe architecture to host per GPU during inference
@@ -140,7 +138,7 @@ def export(
         input_shape_dict = {
             key: (batch_size,) + tuple(batch_file[key].shape[1:])
             for key in batch_file.keys()
-            if not key.startswith("output")
+            if key.startswith("input")
         }
 
     # the network will have some different keyword
@@ -160,15 +158,9 @@ def export(
 
     # determining the number of neural networks for
     # naming the outputs
-    if num_outputs < 1:
-        raise ValueError("num_outputs must be >= 1")
-    output_names = (
-        ["discriminator"]
-        if num_outputs == 1
-        else [f"discriminator_{i}" for i in range(num_outputs)]
-    )
 
     print(input_shape_dict)
+    print(output_names)
     aframe.export_version(
         graph,
         input_shapes=input_shape_dict,
