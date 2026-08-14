@@ -7,3 +7,4 @@ from .supervised import (
     SupervisedMultiModalAframe,
     SupervisedTimeSpectrogramAframe,
 )
+from .multitask import SupervisedMultiTaskAframe

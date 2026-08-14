@@ -948,7 +948,7 @@ class InterferometerResponseSet(WaveformSet):
         # to 1D and then add them in-place all at once
         idx = idx.reshape(-1)
         waveforms = waveforms.reshape(len(self.waveform_fields), -1)
-        x[:, idx] += waveforms
+        x[:, idx] += 2*waveforms #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if any(pad):
             start, stop = pad
             stop = -stop or None

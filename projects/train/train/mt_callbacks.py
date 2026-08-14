@@ -1,0 +1,167 @@
+import io
+import os
+import shutil
+from typing import Optional
+
+import h5py
+import s3fs
+import torch
+from botocore.exceptions import ClientError, ConnectTimeoutError
+from lightning import pytorch as pl
+from lightning.pytorch.cli import SaveConfigCallback
+from lightning.pytorch.callbacks import Callback
+from lightning.pytorch.loggers import WandbLogger
+from lightning.pytorch.utilities import grad_norm
+
+BOTO_RETRY_EXCEPTIONS = (ClientError, ConnectTimeoutError)
+
+class ModelCheckpoint(pl.callbacks.ModelCheckpoint):
+    def on_train_end(self, trainer, pl_module):
+        torch.cuda.empty_cache()
+        module = pl_module.__class__.load_from_checkpoint(
+            self.best_model_path, arch=pl_module.model, metric=pl_module.metric
+        )
+
+        device = pl_module.device
+        # Handle the case of loading training waveforms from disk
+        if trainer.datamodule.waveforms_from_disk:
+            [X], (waveforms, params) = batch = next(iter(trainer.train_dataloader))
+            X = X.to(device)
+            waveforms = waveforms.to(device)
+            X, y, params = trainer.datamodule.inject(X=X, waveforms=waveforms, params=params)
+        else:
+            [X] = next(iter(trainer.train_dataloader))
+            X = X.to(device)
+            X, y = trainer.datamodule.inject(X)
+            y = (y,)
+        if isinstance(X, tuple):
+            X = tuple(i.cpu() for i in X)
+        else:
+            X = X.cpu()
+        trace = torch.jit.trace(module.model.to("cpu"), X)
+
+        save_dir = trainer.logger.save_dir
+        if save_dir.startswith("s3://"):
+            s3 = s3fs.S3FileSystem()
+            with s3.open(f"{save_dir}/model.pt", "wb") as f:
+                torch.jit.save(trace, f)
+
+            s3.copy(self.best_model_path, f"{save_dir}/best.ckpt")
+        else:
+            with open(os.path.join(save_dir, "model.pt"), "wb") as f:
+                torch.jit.save(trace, f)
+            shutil.copy(
+                self.best_model_path, os.path.join(save_dir, "best.ckpt")
+            )
+
+
+class SaveAugmentedBatch(Callback):
+    def on_train_start(self, trainer, pl_module):
+        if trainer.global_rank == 0:
+            # find device module is on
+            device = pl_module.device
+            save_dir = trainer.logger.save_dir
+
+            # build training batch by hand
+            # Handle the case of loading training waveforms from disk
+            if trainer.datamodule.waveforms_from_disk:
+                [X], (waveforms, params) = next(iter(trainer.train_dataloader))
+                X = X.to(device)
+                waveforms = trainer.datamodule.slice_waveforms(
+                    waveforms.to(device)
+                )
+                X, y, params = trainer.datamodule.inject(X=X, waveforms=waveforms, params=params)
+            else:
+                [X] = next(iter(trainer.train_dataloader))
+                X = X.to(device)
+                X, y = trainer.datamodule.inject(X)
+            # If X is not a tuple, make it one for consistency
+            # of format for saving to file below
+            if not isinstance(X, tuple):
+                X = (X,)
+            if not isinstance(y, tuple):
+                y = (y,)
+
+            # build val batch by hand
+            [background, _, _], [signals, val_params] = next(
+                iter(trainer.datamodule.val_dataloader())
+            )
+            background = background.to(device)
+            signals = signals.to(device)
+            X_bg, X_inj, val_params = trainer.datamodule.build_val_batches(
+                background=background,
+                signals=signals,
+                params=val_params,
+            )
+            # Make background and injected validation data into
+            # tuples for consistency if necessary
+            if not isinstance(X_bg, tuple):
+                X_bg = (X_bg,)
+            if not isinstance(X_inj, tuple):
+                X_inj = (X_inj,)
+
+            if save_dir.startswith("s3://"):
+                s3 = s3fs.S3FileSystem()
+                with s3.open(f"{save_dir}/batch.hdf5", "wb") as s3_file:
+                    with io.BytesIO() as f:
+                        with h5py.File(f, "w") as h5file:
+                            for i, x in enumerate(X):
+                                h5file[f"input_{i}"] = x.cpu().numpy()
+                            for key in params.keys():
+                                h5file[key] = params[key].cpu().numpy()
+                            for i, out in enumerate(y):
+                                h5file[f"output_{i}"] = out.cpu().numpy()
+                        s3_file.write(f.getvalue())
+
+                with s3.open(f"{save_dir}/val_batch.hdf5", "wb") as s3_file:
+                    with io.BytesIO() as f:
+                        with h5py.File(f, "w") as h5file:
+                            for i, (bg, inj) in enumerate(
+                                zip(X_bg, X_inj, strict=True)
+                            ):
+                                h5file[f"X_bg_{i}"] = bg.cpu().numpy()
+                                h5file[f"X_inj_{i}"] = inj.cpu().numpy()
+                                for key in val_params.keys():
+                                    h5file[key] = val_params[key].cpu().numpy()
+                        s3_file.write(f.getvalue())
+            else:
+                with h5py.File(os.path.join(save_dir, "batch.hdf5"), "w") as f:
+                    for i, x in enumerate(X):
+                        f[f"input_{i}"] = x.cpu().numpy()
+                    for i, out in enumerate(y):
+                        f[f"output_{i}"] = out.cpu().numpy()
+                    for key in params.keys():
+                        f[key] = params[key].cpu().numpy()
+                with h5py.File(
+                    os.path.join(save_dir, "val_batch.hdf5"), "w"
+                ) as f:
+                    for i, (bg, inj) in enumerate(
+                        zip(X_bg, X_inj, strict=True)
+                    ):
+                        f[f"X_bg_{i}"] = bg.cpu().numpy()
+                        f[f"X_inj_{i}"] = inj.cpu().numpy()
+                    for key in val_params.keys():
+                        f[key] = val_params[key].cpu().numpy()
+            # while we're here let's log the wandb url
+            # associated with the run
+            maybe_wandb_logger = trainer.loggers[-1]
+            if isinstance(maybe_wandb_logger, pl.loggers.WandbLogger):
+                url = maybe_wandb_logger.experiment.url
+                if save_dir.startswith("s3://"):
+                    with s3.open(f"{save_dir}/wandb_url.txt", "wb") as s3_file:
+                        s3_file.write(url.encode())
+                else:
+                    with open(
+                        os.path.join(save_dir, "wandb_url.txt"), "w"
+                    ) as f:
+                        f.write(url)
+
+
+class GradientTracker(Callback):
+    def __init__(self, norm_type: int = 2):
+        self.norm_type = norm_type
+
+    def on_before_optimizer_step(self, trainer, pl_module, optimizer):
+        norms = grad_norm(pl_module, norm_type=self.norm_type)
+        total_norm = norms[f"grad_{float(self.norm_type)}_norm_total"]
+        self.log(f"grad_norm_{self.norm_type}", total_norm)

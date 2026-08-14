@@ -21,8 +21,9 @@ from train.data.waveforms import (
     ChunkedWaveformDataset,
     Hdf5WaveformLoader,
     WaveformLoader,
-    WaveformSampler,
+#     WaveformSampler,
 )
+from train.data.waveforms.mt_sampler import WaveformSampler
 from utils.preprocessing import PsdEstimator
 
 Tensor = torch.Tensor

@@ -9,3 +9,4 @@ from .supervised import (
     SupervisedTimeSpectrogramResNet,
     SupervisedHeterodyneTimeDomainResNet,
 )
+from .regression import MultiTaskTimeDomainResNet

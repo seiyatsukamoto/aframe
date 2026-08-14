@@ -10,3 +10,4 @@ from .time_domain import (
     HeterodyneTimeDomainSupervisedAframeDataset,
     TimeDomainSupervisedRegressionDataset,
 )
+from .multitask import MultitaskSupervisedAframeDataset

@@ -191,6 +191,8 @@ class SnrSampler:
         diff = self.max_min_snr - self.min_min_snr
         new = self.max_min_snr - frac * diff
 
+        #if self._step%100 == 0:
+        #    print(f'{self._step} with snr {new}')
         self.dist = PowerLaw(new, self.max_snr, self.alpha)
 
 
