@@ -36,11 +36,12 @@ class SupervisedTimeDomainResNet(ResNet1D, SupervisedArchitecture):
         width_per_group: int = 64,
         stride_type: Optional[list[Literal["stride", "dilation"]]] = None,
         norm_layer: Optional[NormLayer] = None,
+        classes: int = 1
     ) -> None:
         super().__init__(
             num_ifos,
             layers=layers,
-            classes=1,
+            classes=classes,
             kernel_size=kernel_size,
             zero_init_residual=zero_init_residual,
             groups=groups,

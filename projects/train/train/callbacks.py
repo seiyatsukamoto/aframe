@@ -57,7 +57,7 @@ class ModelCheckpoint(pl.callbacks.ModelCheckpoint):
             X = tuple(i.cpu() for i in X)
         else:
             X = X.cpu()
-        trace = torch.jit.trace(module.model.to("cpu"), X)
+        trace = torch.jit.trace(module.model.eval().to("cpu"), X)
 
         save_dir = trainer.logger.save_dir
         if save_dir.startswith("s3://"):

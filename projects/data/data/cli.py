@@ -42,6 +42,7 @@ def main(args=None):
         testing_waveforms(args)
 
     elif args.subcommand == "validation_waveforms":
+        print('Doing validation')
         validation_waveforms(args)
 
 

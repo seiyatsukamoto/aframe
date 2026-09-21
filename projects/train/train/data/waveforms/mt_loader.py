@@ -1,0 +1,300 @@
+from pathlib import Path
+
+import logging
+import math
+import warnings
+from typing import Sequence, Optional
+
+import h5py
+import numpy as np
+import torch
+
+from ledger.injections import WaveformPolarizationSet
+from .mt_sampler import WaveformSampler
+
+
+class WaveformLoader(WaveformSampler):
+    """
+    Module that should be used if training waveforms
+    are loaded from disk. The main function is to make
+    waveform handling consistent whether the waveforms
+    are generated during training or loaded from disk
+    The actual loading of the training waveforms is done
+    by `waveform_dataloader` in `train.data.base.train_dataloader()`.
+    """
+
+    def __init__(
+        self,
+        *args,
+        training_waveform_path: Path,
+        **kwargs,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        if training_waveform_path.is_dir():
+            self.training_waveform_files = list(
+                training_waveform_path.iterdir()
+            )
+        else:
+            self.training_waveform_files = [training_waveform_path]
+
+        waveform_set = WaveformPolarizationSet.read(
+            self.training_waveform_files[0]
+        )
+        if waveform_set.right_pad != self.right_pad:
+            raise ValueError(
+                "Training waveform file does not have the same "
+                "right pad as validation waveform file"
+            )
+
+    def get_train_waveforms(self, world_size, rank, device):
+        pass
+
+
+# TODO: move to ml4gw
+class Hdf5WaveformLoader(torch.utils.data.IterableDataset):
+    """
+    Iterable dataset that loads samples of waveforms
+    from a set of HDF5 files.
+
+    It is _strongly_ recommended that these files have been
+    written using [chunked storage]
+    (https://docs.h5py.org/en/stable/high/dataset.html#chunked-storage).
+    This has shown to produce increases in read-time speeds
+    of over an order of magnitude.
+
+    Args:
+        fnames:
+            Paths to HDF5 files from which to sample data.
+        channels:
+            Datasets to read from the indicated files, which
+            will be stacked along dim 1 of the generated batches
+            during iteration.
+        batch_size:
+            Number of samples to load at each iteration.
+        batches_per_epoch:
+            Number of batches to generate during each call
+            to `__iter__`.
+        chunk_size:
+            Number of samples to load from each file at a time.
+            This is useful for reducing I/O overhead when reading.
+        path:
+            Optional path to location of datasets in hdf5 files.
+            `path` should be delimited by forward slashes. If `None`
+            it is assumed the datasets are at the root of the file.
+    """
+
+    def __init__(
+        self,
+        fnames: Sequence[Path],
+        channels: Sequence[str],
+        batch_size: int,
+        batches_per_epoch: int,
+        chunk_size: int = 1000,
+        path: Optional[Path | str] = None,
+    ):
+        self.fnames = fnames
+        self.channels = channels
+        self.batch_size = batch_size
+        self.batches_per_epoch = batches_per_epoch
+        self.chunk_size = chunk_size
+
+        if path is not None:
+            self.path = Path(path).parts
+        else:
+            self.path = None
+
+        self.sizes = {}
+        self.mmap_files = {}
+        self.mmap_datasets = {}
+        self.param_datasets = {}
+
+        # for each file store the datasets
+        # of interest in a dictionary so we
+        # can access them at will without needing
+        # to reopen the files each time
+        self.param_keys = None
+        for fname in self.fnames:
+            f, g = self.open(fname)
+            self.mmap_files[fname] = f
+            self.mmap_datasets[fname] = {
+                channel: g[channel] for channel in self.channels
+            }
+
+            pm_grp = f["parameters"]
+            keys = list(pm_grp.keys())
+            if self.param_keys is None:
+                self.param_keys = keys
+            elif set(keys) != set(self.param_keys):
+                raise ValueError(
+                    f"Parameter keys in {fname} ({keys}) do not match "
+                    f"those in the first file ({self.param_keys})"
+                )
+            self.param_datasets[fname] = {
+                k: pm_grp[k] for k in self.param_keys
+            }
+
+            # store sizes of each dataset and warn if not chunked;
+            # assumes all dsets have same attributes
+            # like size and chunking behavior
+            dset = self.mmap_datasets[fname][self.channels[0]]
+            self.sizes[fname] = len(dset)
+            if dset.chunks is None:
+                warnings.warn(
+                    "File {} contains datasets that were generated "
+                    "without using chunked storage. This can have "
+                    "severe performance impacts at data loading time. "
+                    "If you need faster loading, try re-generating "
+                    "your datset with chunked storage turned on.".format(
+                        fnames
+                    ),
+                    stacklevel=2,
+                )
+
+        self.waveform_size = dset.shape[1]
+        self.probs = np.array([i / self.total for i in self.sizes.values()])
+
+    @property
+    def num_channels(self):
+        return len(self.channels)
+
+    @property
+    def chunks_per_batch(self):
+        return math.ceil(self.batch_size / self.chunk_size)
+
+    @property
+    def total(self):
+        return sum(self.sizes.values())
+
+    def __len__(self):
+        return self.batches_per_epoch
+
+    def __del__(self):
+        # close all opened files when the object is destroyed
+        for f in self.mmap_files.values():
+            f.close()
+
+    def open(self, fname) -> tuple[h5py.File, h5py.Group]:
+        f = group = h5py.File(fname, "r")
+        if self.path is not None:
+            for path in self.path:
+                group = group[path]
+        return f, group
+
+    def load_chunk(self, fname, start, size):
+        end = min(start + size, self.sizes[fname])
+        waveforms = {
+            channel: self.mmap_datasets[fname][channel][start:end]
+            for channel in self.channels
+        }
+        params = {
+            k: self.param_datasets[fname][k][start:end]
+            for k in self.param_keys
+        }
+        return waveforms, params
+
+    def sample_batch(self):
+        # allocate batch up front
+        batch = np.zeros(
+            (self.batch_size, self.num_channels, self.waveform_size)
+        )
+        params_buf = {
+            k: np.zeros(
+                self.batch_size,
+                dtype=self.param_datasets[self.fnames[0]][k].dtype,
+            )
+            for k in self.param_keys
+        }
+
+        for i in range(self.chunks_per_batch):
+            fname = np.random.choice(self.fnames, p=self.probs)
+
+            chunk_size = min(
+                self.chunk_size, self.batch_size - i * self.chunk_size
+            )
+
+            # select a random starting index for the chunk
+            max_start = self.sizes[fname] - chunk_size
+            start = np.random.randint(0, max_start + 1)
+
+            # load the chunk and insert it into the batch
+            wf_chunk, param_chunk = self.load_chunk(fname, start, chunk_size)
+
+            batch_start = i * self.chunk_size
+            batch_end = batch_start + chunk_size
+
+            for k in self.param_keys:
+                params_buf[k][batch_start:batch_end] = param_chunk[k]
+
+            for j, channel in enumerate(self.channels):
+                batch[batch_start:batch_end, j, :] = wf_chunk[channel]
+
+        waveforms = torch.tensor(batch)
+        params = {k: torch.tensor(v) for k, v in params_buf.items()}
+        return waveforms, params
+
+    def __iter__(self):
+        for _ in range(self.batches_per_epoch):
+            yield self.sample_batch()
+
+
+class ChunkedWaveformDataset(torch.utils.data.IterableDataset):
+    """
+    Wrapper dataset that will loop through chunks of timeseries
+    data produced by another iterable and sample subsets
+    of waveforms from each chunk.
+
+    Args:
+        chunk_it:
+            Iterator which will produce batches of waveform
+            data to sample subsets from. Should have shape
+            `(N, C, T)`, where `N` is the number of waveformns
+            to sample from, `C` is the number of channels,
+            and `T` is the number of samples along the
+            time dimension for each waveform.
+        batch_size:
+            Number of waveforms to sample at each iteration
+        batches_per_chunk:
+            Number of batches of waveforms to sample from
+            each chunk before moving on to the next one.
+    """
+
+    def __init__(
+        self,
+        chunk_it: Sequence,
+        batch_size: int,
+        batches_per_chunk: int,
+    ) -> None:
+        self.logger = logging.getLogger(__name__)
+        self.chunk_it = chunk_it
+        self.batch_size = batch_size
+        self.batches_per_chunk = batches_per_chunk
+
+    def __len__(self):
+        return len(self.chunk_it) * self.batches_per_chunk
+
+    def __iter__(self):
+        it = iter(self.chunk_it)
+
+        def _next(it):
+            [waveform_chunk], param_dict_chunk = next(it)
+            return waveform_chunk, {
+                k: v[0] for k, v in param_dict_chunk.items()
+            }
+
+        waveform_chunk, param_chunk = _next(it)
+        num_waveforms, _, _ = waveform_chunk.shape
+
+        while True:
+            # generate batches from the current chunk
+            for _ in range(self.batches_per_chunk):
+                idx = torch.randperm(num_waveforms)[: self.batch_size]
+                yield (
+                    waveform_chunk[idx],
+                    {k: v[idx] for k, v in param_chunk.items()},
+                )
+
+            try:
+                waveform_chunk, param_chunk = _next(it)
+            except StopIteration:
+                break
+            num_waveforms, _, _ = waveform_chunk.shape

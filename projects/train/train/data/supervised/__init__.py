@@ -5,9 +5,11 @@ from .time_frequency_domain import (
 )
 from .multimodal import MultiModalSupervisedAframeDataset
 from .supervised import SupervisedAframeDataset
+from .val_sv import ValSVSupervisedAframeDataset
 from .time_domain import (
     TimeDomainSupervisedAframeDataset,
     HeterodyneTimeDomainSupervisedAframeDataset,
     TopKHeterodyneTimeDomainSupervisedAframeDataset,
     NeighborhoodTimeDomainSupervisedAframeDataset
 )
+from .multitask import MultitaskSupervisedAframeDataset

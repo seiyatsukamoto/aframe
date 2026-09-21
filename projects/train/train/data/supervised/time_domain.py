@@ -22,6 +22,7 @@ class Heterodyne(torch.nn.Module):
         return_type: Literal["time", "freq", "both"],
         highpass: float = 0,
         lowpass: float = 2048,
+        keep_last_n_seconds: float | None = None,
     ):
         super().__init__()
         self.sample_rate = sample_rate
@@ -31,8 +32,8 @@ class Heterodyne(torch.nn.Module):
         freqs = torch.fft.rfftfreq(int(kernel_length*sample_rate), d=1.0 / sample_rate)
         mask = (freqs > lowpass) | (freqs < highpass)
         self.register_buffer("mask", mask)
-
-
+        if keep_last_n_seconds is not None:
+            self.keep_last_n_samples = keep_last_n_seconds*sample_rate
         self.return_type = return_type
         if self.return_type not in {"time", "freq", "both"}:
             raise ValueError(
@@ -59,23 +60,39 @@ class Heterodyne(torch.nn.Module):
 
 
 class TimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
+    def __init__(
+        self,
+        *args,
+        keep_last_n_seconds: float = None,
+        **kwargs,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        if keep_last_n_seconds is not None:
+            self.keep_last_n_samples = int(keep_last_n_seconds*self.hparams.sample_rate)
+        
     def build_val_batches(self, background, signals):
         X_bg, X_inj, psds = super().build_val_batches(background, signals)
         X_bg = self.whitener(X_bg, psds)
+        if self.keep_last_n_samples is not None:
+            X_bg = X_bg[..., -self.keep_last_n_samples:]
         # whiten each view of injections
         X_fg = []
         for inj in X_inj:
             inj = self.whitener(inj, psds)
-            X_fg.append(inj)
+            if self.keep_last_n_samples is not None:
+                X_fg.append(inj[..., -self.keep_last_n_samples:])
+            else:
+                X_fg.append(inj)
 
         X_fg = torch.stack(X_fg)
         return X_bg, X_fg
 
     def inject(self, X, waveforms=None):
         X, y, psds = super().inject(X, waveforms)
-        X = self.whitener(X, psds)
-        return X, y
-
+        X_w = self.whitener(X, psds)
+        if self.keep_last_n_samples is not None:
+            X_w = X_w[..., -self.keep_last_n_samples:]
+        return X_w, y, psds, X
 
 class HeterodyneTimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
     """
@@ -413,7 +430,7 @@ class NeighborhoodTimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
         
         hl = torch.max(pooled[:, :_M]*pooled[:, _M:], dim = -1)[0]
         idx = torch.argmax(hl, dim = -1)
-        idx = idx.unsqueeze(1).repeat(1, 5)+self.offsets.to(idx.device)
+        idx = idx.unsqueeze(1).repeat(1, len(self.offsets))+self.offsets.to(idx.device)
         idx = torch.clip(idx, min=0, max=99)
         
         idx = torch.concat([idx, idx+_M], dim = -1) #get both h and l channels
