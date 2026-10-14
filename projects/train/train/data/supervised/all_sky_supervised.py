@@ -57,16 +57,15 @@ class AllSkySupervised(AllSkyBase):
             )
 
         X, psds = self.psd_estimator(X)
-        #X = self.inverter(X) #!!!!!!!!!!!!!!!!!!!!!!!!
-        #X = self.reverser(X)
+        X = self.inverter(X)
+        X = self.reverser(X)
         # sample enough waveforms to do true injections,
         # swapping, and muting
 
         rvs = torch.rand(size=X.shape[:1], device=X.device)
         mask = rvs < self.sample_prob
-
+        
         dec, psi, phi = self.sample_extrinsic(X[mask])
-        dec, psi, phi = torch.zeros(mask.sum().item()), torch.zeros(mask.sum().item()), torch.zeros(mask.sum().item())
         # If we're loading waveforms from disk, we can
         # slice out the ones we want.
         # If not, we're generating them on the fly.
@@ -77,8 +76,7 @@ class AllSkySupervised(AllSkyBase):
             # cases I'm not thinking of
             N = mask.sum().item()
             idx = torch.randperm(waveforms.shape[0])[:N]
-            #waveforms = waveforms[idx].to(X.device).float()#!!!!!!!!!!!!!!!!!!
-            waveforms = waveforms[:N].to(X.device).float()
+            waveforms = waveforms[idx].to(X.device).float()
             hc, hp = waveforms[:, 0], waveforms[:, 1]
         else:
             hc, hp = self.waveform_sampler.sample(X[mask])
@@ -94,7 +92,7 @@ class AllSkySupervised(AllSkyBase):
         kernels = sample_kernels(
             responses, kernel_size=X.size(-1), coincident=True
         )
-
+        
         # perform augmentations on the responses themselves,
         # keep track of which indices have been augmented
         swap_indices = mute_indices = []

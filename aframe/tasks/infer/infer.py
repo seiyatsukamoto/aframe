@@ -60,6 +60,7 @@ class DeployInferLocal(InferBase):
         # automatically map it into the environment
         ip = self.get_ip_address()
         os.environ["AFRAME_TRITON_IP"] = ip
+        os.environ["AFRAME_TRITON_PORT"] = "8001"
         server_log = self.output_dir / "server.log"
 
         # TODO: figure out why serves
@@ -69,6 +70,9 @@ class DeployInferLocal(InferBase):
             self.model_repo_dir,
             self.triton_image,
             log_file=server_log,
+            server_args=["--grpc-port 8001",
+                         "--http-port 8000",
+                         "--metrics-port 8002",],
             wait=True,
         )
 

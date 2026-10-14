@@ -8,7 +8,6 @@ from torchmetrics.classification import BinaryAUROC
 
 from utils import x_per_y
 
-
 class TimeSlideAUROC(Metric):
     """
     Metric that computes the area under the ROC curve (AUROC)
@@ -80,6 +79,45 @@ class TimeSlideAUROC(Metric):
         # shuffle the prediction and target arrays up
         # front so that constant-output models don't
         # accidently come out perfect
+        idx = torch.randperm(len(y_pred))
+        y_pred = y_pred[idx]
+        y = y[idx]
+        return self.metric(y_pred, y)
+
+class SPLMetric(TimeSlideAUROC):
+    def __init__(
+        self, *args, **kwargs
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.add_state("chirp_mass", default=[])
+
+    def update(
+        self, shift: int, background: torch.Tensor, foreground: torch.Tensor, chirp_mass: torch.Tensor
+    ) -> None:
+        self.shifts.append(torch.Tensor([shift]).to(background.device))
+        self.background.append(background)
+        self.foreground.append(foreground)
+        self.chirp_mass.append(chirp_mass)
+
+    def compute(self):
+        foreground, background, chirp_mass = [], defaultdict(list), []
+        for i, bg, fg, cm in zip(
+            self.shifts, self.background, self.foreground, self.chirp_mass, strict=True
+        ):
+            foreground.append(fg)
+            background[i.item()].append(bg)
+            chirp_mass.append(cm)
+        foreground = torch.cat(foreground)
+        chirp_mass = torch.cat(chirp_mass)
+        pooled_background = []
+        for bg in background.values():
+            bg = torch.cat(bg).view(1, 1, -1)
+            bg = self.pool(bg).view(-1)
+            pooled_background.append(bg)
+        background = torch.cat(pooled_background)
+        y_pred = torch.cat([background, foreground])
+        y = torch.zeros_like(y_pred)
+        y[len(background) :] = 1
         idx = torch.randperm(len(y_pred))
         y_pred = y_pred[idx]
         y = y[idx]

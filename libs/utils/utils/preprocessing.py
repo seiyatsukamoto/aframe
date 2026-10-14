@@ -283,6 +283,77 @@ class BatchWhitener(torch.nn.Module):
             return x, whitened
         return x
 
+#class HeterodyneBatchWhitener(torch.nn.Module):
+#    def __init__(
+#        self,
+#        kernel_length: float,
+#        sample_rate: float,
+#        inference_sampling_rate: float,
+#        batch_size: int,
+#        fduration: float,
+#        fftlength: float,
+#        heterodyne_phase_file: str,
+#        k: int,
+#        keep_last_n_seconds: float,
+#        highpass: float | None = None,
+#        lowpass: float | None = None,
+#        ht_highpass: float | None = None,
+#        ht_lowpass: float | None = None,
+#        return_whitened: bool = False,
+#        augmentor: Callable[[Tensor], Tensor] | None = None,
+#    ) -> None:
+#        super().__init__()
+#        self.stride_size = int(sample_rate / inference_sampling_rate)
+#        self.kernel_size = int(kernel_length * sample_rate)
+#        self.augmentor = augmentor
+#        self.return_whitened = return_whitened
+#        strides = (batch_size - 1) * self.stride_size
+#        fsize = int(fduration * sample_rate)
+#        size = strides + self.kernel_size + fsize
+#        length = size / sample_rate
+#        self.k = k
+#        self.heterodyning_phase = torch.tensor(np.load(heterodyne_phase_file))
+#        if keep_last_n_seconds is not None:
+#            self.keep_last_n_samples = int(
+#                keep_last_n_seconds * self.hparams.sample_rate
+#            )
+#        self.psd_estimator = PsdEstimator(
+#            length,
+#            sample_rate,
+#            fftlength=fftlength,
+#            overlap=None,
+#            average="median",
+#            fast=highpass is not None,
+#        )
+#        self.whitener = Whiten(
+#            kernel_length = kernel_length,
+#            fduration = fduration,
+#            sample_rate = sample_rate,
+#            heterodyning_phase = self.heterodyning_phase,
+#            keep_last_n_samples = self.keep_last_n_samples,
+#            lowpass = lowpass,
+#            highpass = highpass,
+#            ht_highpass = ht_highpass,
+#            ht_lowpass = ht_lowpass,
+#            k = k,
+#            return_preds = False,
+#        )
+#
+#    def forward(self, x: Tensor) -> Tensor:
+#        if x.ndim == 3:
+#            num_channels = x.size(1)
+#        elif x.ndim == 2:
+#            num_channels = x.size(0)
+#        else:
+#            raise ValueError(
+#                "Expected input to be either 2 or 3 dimensional, "
+#                "but found shape {}".format(x.shape)
+#            )
+#        x, psd = self.psd_estimator(x.double())
+#        whitened = self.whitener(x, psd)
+#        x = unfold_windows(whitened, self.keep_last_n_seconds, self.stride_size)
+#        x = x.reshape(-1, self.k+1, self.keep_last_n_seconds)
+#        return x
 
 class MultiModalPreprocessor(torch.nn.Module):
     """

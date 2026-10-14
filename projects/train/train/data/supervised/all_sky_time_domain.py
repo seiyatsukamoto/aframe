@@ -47,7 +47,7 @@ class TimeDomainSupervisedAframeDataset(AllSkySupervised):
         return X, y
 
 
-from train.data.heterodyne_whiten import ht_Whiten
+from utils.heterodyne_whiten import ht_Whiten
 from utils.s3 import open_file
 class LowHighMassFusion(AllSkySupervised):
     def __init__(
@@ -162,7 +162,7 @@ class LowHighMassFusion(AllSkySupervised):
         
         low = self.compute_low(torch.cat([X_td, X_ht], dim=1))
         high = self.compute_high(X_td)
-        return torch.cat([low, high], dim = 1), y, torch.cat([X_td, X_ht], dim=1), X, psds#!!!!!!!!!!!!!!!!!!
+        return torch.cat([low, high], dim = 1), y, X_td, X, psds#!!!!!!!!!!!!!!!!!!
     
     def topk_bin(self, X, _M, _B):
         pooled = F.avg_pool1d(X.abs(), kernel_size = 31, stride = 5, padding = 0)

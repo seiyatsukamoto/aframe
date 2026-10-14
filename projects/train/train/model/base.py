@@ -194,7 +194,7 @@ class AframeBase(pl.LightningModule):
         self.log(
             "valid_auroc",
             self.metric,
-            on_step=True,
+            on_step=False,
             on_epoch=True,
             sync_dist=True,
         )

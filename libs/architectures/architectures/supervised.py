@@ -296,7 +296,7 @@ class SupervisedHeterodyneTimeDomainResNet(SupervisedArchitecture):
     def __init__(
         self,
         num_ifos: int,
-        num_chirp_masses: int,
+        k: int,
         layers: list[int],
         kernel_size: int = 3,
         zero_init_residual: bool = False,
@@ -308,7 +308,7 @@ class SupervisedHeterodyneTimeDomainResNet(SupervisedArchitecture):
     ) -> None:
         super().__init__()
         self.time_domain_resnet = ResNet1D(
-            in_channels=num_ifos * num_chirp_masses,
+            in_channels=num_ifos * k,
             layers=layers,
             classes=1,
             kernel_size=kernel_size,

@@ -17,6 +17,11 @@ class SupervisedAframe(AframeBase):
     def train_step(self, batch: tuple[Tensor, Tensor]) -> Tensor:
         X, y = batch
         y_hat = self(X)
+        #loss = torch.nn.functional.binary_cross_entropy_with_logits(y_hat, y)
+        #if torch.isnan(loss).any():
+        #    torch.save('./X.pt', X)
+        #    torch.save('./y.pt', y)
+        #    torch.save('./y_hat.pt', y_hat)
         return torch.nn.functional.binary_cross_entropy_with_logits(y_hat, y)
 
     def score(self, X):

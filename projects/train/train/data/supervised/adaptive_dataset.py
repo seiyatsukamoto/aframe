@@ -1,0 +1,131 @@
+import math
+import torch
+from typing import Literal
+
+from train.data.supervised.supervised import SupervisedAframeDataset
+from ml4gw.transforms import Heterodyne
+
+import torch.nn.functional as F
+import numpy as np
+
+
+class TimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
+    def build_val_batches(self, background, signals):
+        X_bg, X_inj, psds = super().build_val_batches(background, signals)
+        X_bg = self.whitener(X_bg, psds)
+        # whiten each view of injections
+        X_fg = []
+        for inj in X_inj:
+            inj = self.whitener(inj, psds)
+            X_fg.append(inj)
+
+        X_fg = torch.stack(X_fg)
+        return X_bg, X_fg
+
+    def inject(self, X, waveforms=None):
+        X, y, psds = super().inject(X, waveforms)
+        X = self.whitener(X, psds)
+        return X, y
+
+class TopKHeterodyneTimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
+    def __init__(
+        self,
+        chirp_mass_low: float = 1.0,
+        chirp_mass_high: float = 2.5,
+        num_chirp_masses: int = 100,
+        chirp_mass_spacing: Literal["linear", "log"] = "log",
+        keep_last_n_seconds: float = None,
+        k: int = 10,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.k = k
+        self.chirp_mass_grid = self._create_chirp_mass_grid(
+            chirp_mass_low,
+            chirp_mass_high,
+            num_chirp_masses,
+            chirp_mass_spacing,
+        )
+        self.keep_last_n_seconds = keep_last_n_seconds
+        if self.keep_last_n_seconds is not None:
+            self.keep_last_n_samples = int(
+                self.keep_last_n_seconds * self.hparams.sample_rate
+            )
+    def build_transforms(self, *args, **kwargs):
+        super().build_transforms(*args, **kwargs)
+        self.heterodyne_transform = Heterodyne(
+            sample_rate=self.hparams.sample_rate,
+            kernel_length=self.hparams.kernel_length,
+            chirp_mass=self.chirp_mass_grid,
+            return_type="time",
+        )
+    def _create_chirp_mass_grid(
+        self,
+        chirp_mass_low: float,
+        chirp_mass_high: float,
+        num_chirp_masses: int,
+        chirp_mass_spacing: Literal["linear", "log"],
+    ) -> torch.Tensor:
+        if chirp_mass_spacing == "linear":
+            return torch.linspace(
+                chirp_mass_low, chirp_mass_high, num_chirp_masses
+            )
+        elif chirp_mass_spacing == "log":
+            return torch.logspace(
+                math.log10(chirp_mass_low),
+                math.log10(chirp_mass_high),
+                num_chirp_masses,
+            )
+        else:
+            raise ValueError(
+                f"Invalid chirp mass spacing: {chirp_mass_spacing}"
+            )
+    @torch.no_grad()
+    def build_val_batches(self, background, signals):
+        X_bg, X_inj, psds = super().build_val_batches(background, signals)
+        X_bg = self.whitener(X_bg, psds)
+        if self.keep_last_n_seconds is not None:
+            X_bg_td = X_bg[..., -self.keep_last_n_samples :].float().clone()
+        else:
+            X_bg = X_bg.float().clone()
+        X_bg = self.heterodyne_transform(X_bg)
+        _B_bg, _C_bg, _M_bg, _T_bg = X_bg.shape
+        X_bg = X_bg.reshape(_B_bg, _C_bg * _M_bg, _T_bg)
+        X_bg = self.topk_bin(X_bg, _M_bg, _B_bg)
+        # whiten each view of injections
+        X_fg = []
+        X_fg_td = []
+        for inj in X_inj:
+            inj = self.whitener(inj, psds)
+            inj = self.heterodyne_transform(inj)
+            _B_fg, _C_fg, _M_fg, _T_fg = inj.shape
+            inj = inj.reshape(_B_fg, _C_fg * _M_fg, _T_fg)
+            inj = self.topk_bin(inj, _M_fg, _B_fg)
+            X_fg.append(inj)
+        X_fg = torch.stack(X_fg)
+        if self.keep_last_n_seconds is not None:
+            X_bg = X_bg[..., -self.keep_last_n_samples :].float()
+            X_fg = X_fg[..., -self.keep_last_n_samples :].float()
+        else:
+            X_bg = X_bg.float()
+            X_fg = X_fg.float()
+        return X_bg, X_fg
+    def inject(self, X, waveforms=None):
+        X, y, psds = super().inject(X, waveforms)
+        X = self.whitener(X, psds)
+        X = self.heterodyne_transform(X)
+        _B, _C, _M, _T = X.shape
+        X = X.view(_B, _C * _M, _T)
+        X = self.topk_bin(X, _M, _B)
+        if self.keep_last_n_seconds is not None:
+            return X[..., -self.keep_last_n_samples :], y
+        else:
+            return X, y
+    def topk_bin(self, X, _M, _B):
+        pooled = F.avg_pool1d(X.abs(), kernel_size = 31, stride = 5, padding = 0)
+        hl = torch.max(pooled[:, :_M]*pooled[:, _M:], dim = -1)[0]
+        pred = hl.topk(self.k, dim = -1)[1]
+        pred = torch.concat([pred, pred+_M], dim = -1)
+        pred = pred.unsqueeze(-1).expand(-1, -1, X.size(-1))
+        return torch.gather(X, dim=1, index=pred)

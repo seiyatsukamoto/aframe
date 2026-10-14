@@ -58,3 +58,20 @@ class CBCGenerator(WaveformGenerator):
         waveforms = torch.stack([hc, hp], dim=1)
         hc, hp = waveforms.transpose(1, 0)
         return hc.float(), hp.float()
+
+class SPLGenerator(CBCGenerator): #Takes in log mass ratio instead of mass ratio
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+
+    def get_val_waveforms(self, world_size, rank):
+        start, stop = self.get_slice_bounds(
+            self.num_val_waveforms, world_size, rank
+        )
+        waveform_set = self.waveform_set_cls.read(self.val_waveform_file)
+        return (torch.Tensor(waveform_set.waveforms[start:stop]), 
+                torch.Tensor(waveform_set.mass_1[start:stop]), 
+                torch.Tensor(waveform_set.mass_2[start:stop]))

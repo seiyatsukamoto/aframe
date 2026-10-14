@@ -13,15 +13,23 @@ from bilby.core.prior import (
     PriorDict,
     Sine,
     Triangular,
+    TruncatedGaussian,
+    ConditionalTruncatedGaussian,
     Uniform,
 )
 from bilby.gw.prior import UniformComovingVolume, UniformSourceFrame
+
 
 from priors.utils import (
     mass_condition_powerlaw,
     mass_condition_uniform,
     mass_constraints,
+    cm_mr_to_m1_m2,
+    mr_limit_from_cm,
+    mass_ratio_condition_powerlaw,
+    mass_ratio_condition_truncatedgaussian
 )
+
 from utils.cosmology import DEFAULT_COSMOLOGY
 
 # Unit names
@@ -170,6 +178,42 @@ def end_o3_ratesandpops(
     for key, value in spin_prior.items():
         prior[key] = value
     detector_frame_prior = False
+    return prior, detector_frame_prior
+
+def end_o3_ratesandpops_flat(
+    cosmology: cosmo.Cosmology = DEFAULT_COSMOLOGY,
+) -> ConditionalPriorDict:
+    """
+    Define a Bilby `PriorDict` that matches the distributions used
+    by the LIGO Rates and Populations group for pipeline searches
+    at the end of the third observing run.
+
+    Masses are defined in the source frame.
+
+    Args:
+        cosmology:
+            An `astropy` cosmology, used to determine redshift sampling
+
+    Returns:
+        prior:
+            `PriorDict` describing the binary black hole population
+        detector_frame_prior:
+            Boolean indicating which frame masses are defined in
+    """
+    prior = ConditionalPriorDict(uniform_extrinsic())
+    prior["cm"] = Uniform(minimum=4.7, maximum=18.5, unit=msun)
+    prior["mr"] = ConditionalTruncatedGaussian(condition_func=mass_ratio_condition_truncatedgaussian,
+                                                   mu = -0.05,
+                                                   sigma = 1,
+                                                   minimum = -10,
+                                                   maximum = 10)
+    prior["redshift"] = UniformComovingVolume(
+        0, 2, name="redshift", cosmology=cosmology
+    )
+    spin_prior = uniform_spin()
+    for key, value in spin_prior.items():
+        prior[key] = value
+    detector_frame_prior = True
     return prior, detector_frame_prior
 
 

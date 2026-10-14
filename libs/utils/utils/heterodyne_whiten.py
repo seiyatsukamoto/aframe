@@ -246,12 +246,13 @@ class ht_Whiten(torch.nn.Module):
         self.ht_lowpass = ht_lowpass
         N = (fduration+kernel_length)*sample_rate
         num_freqs = int(N//2+1)
-        angle = torch.angle(heterodyning_phase)
-        mag = torch.abs(heterodyning_phase)
-        angle = unwrap(angle, dim=-1)
-        angle = torch.nn.functional.interpolate(angle.unsqueeze(1), size=(num_freqs,), mode="linear").squeeze(1)
-        mag = torch.nn.functional.interpolate(mag.unsqueeze(1), size=(num_freqs,), mode="linear").squeeze(1)
-        heterodyning_phase = mag * torch.exp(1j * angle)
+        if num_freqs != heterodyning_phase.shape(-1):
+            angle = torch.angle(heterodyning_phase)
+            mag = torch.abs(heterodyning_phase)
+            angle = unwrap(angle, dim=-1)
+            angle = torch.nn.functional.interpolate(angle.unsqueeze(1), size=(num_freqs,), mode="linear").squeeze(1)
+            mag = torch.nn.functional.interpolate(mag.unsqueeze(1), size=(num_freqs,), mode="linear").squeeze(1)
+            heterodyning_phase = mag * torch.exp(1j * angle)
         
         df = sample_rate / N
         if ht_highpass is not None:

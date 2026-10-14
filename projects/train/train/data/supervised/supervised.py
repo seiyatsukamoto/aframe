@@ -6,6 +6,9 @@ from ml4gw.utils.slicing import sample_kernels
 from train import augmentations as aug
 from train.data.base import BaseAframeDataset
 
+from ml4gw.utils.slicing import unfold_windows
+
+Tensor = torch.Tensor
 
 class SupervisedAframeDataset(BaseAframeDataset):
     def __init__(
@@ -51,8 +54,8 @@ class SupervisedAframeDataset(BaseAframeDataset):
             )
 
         X, psds = self.psd_estimator(X)
-        #X = self.inverter(X)#!!!!!!!!!!!!
-        #X = self.reverser(X)
+        X = self.inverter(X)
+        X = self.reverser(X)
         # sample enough waveforms to do true injections,
         # swapping, and muting
 
@@ -60,7 +63,6 @@ class SupervisedAframeDataset(BaseAframeDataset):
         mask = rvs < self.sample_prob
 
         dec, psi, phi = self.sample_extrinsic(X[mask])
-        dec, psi, phi = torch.zeros(mask.sum().item()), torch.zeros(mask.sum().item()), torch.zeros(mask.sum().item())
         # If we're loading waveforms from disk, we can
         # slice out the ones we want.
         # If not, we're generating them on the fly.
@@ -71,8 +73,8 @@ class SupervisedAframeDataset(BaseAframeDataset):
             # cases I'm not thinking of
             N = mask.sum().item()
             idx = torch.randperm(waveforms.shape[0])[:N]
-            #waveforms = waveforms[idx].to(X.device).float()#!!!!!!!!!!!!!!!!!!
-            waveforms = waveforms[:N].to(X.device).float()
+            waveforms = waveforms[idx].to(X.device).float()
+            #waveforms = waveforms.to(X.device)
             hc, hp = waveforms[:, 0], waveforms[:, 1]
         else:
             hc, hp = self.waveform_sampler.sample(X[mask])
@@ -109,3 +111,62 @@ class SupervisedAframeDataset(BaseAframeDataset):
         y[mask] += 1
 
         return X, y, psds
+
+class SPLSupervisedAframeDataset(SupervisedAframeDataset):
+    def on_after_batch_transfer(self, batch, _):
+        if self.trainer.training:
+            if self.waveforms_from_disk:
+                [batch], waveforms = batch
+                batch = self.inject(batch, waveforms)
+            else:
+                [batch] = batch
+                batch = self.inject(batch)
+        elif self.trainer.validating or self.trainer.sanity_checking:
+            [background, _, timeslide_idx], [signals, m1, m2] = batch
+            shift = self.timeslides[timeslide_idx].shift_size
+            X_bg, X_fg, m1, m2 = self.build_val_batches(background, signals, m1, m2)
+            batch = (shift, X_bg, X_fg, m1, m2)
+        return batch
+    def build_val_batches(
+        self,
+        background: Tensor,
+        signals: Tensor,
+        m1: Tensor, 
+        m2: Tensor,
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor, Tensor]:
+        sample_size = int(self.sample_length * self.hparams.sample_rate)
+        stride = int(self.hparams.valid_stride * self.hparams.sample_rate)
+        background = unfold_windows(background, sample_size, stride=stride)
+        X, psd = self.psd_estimator(background)
+        step = int(len(X) / len(signals))
+        if not step:
+            signals = signals[: len(X)]
+            m1 = m1[:len(X)]
+            m2 = m2[:len(X)]
+        else:
+            X = X[::step][: len(signals)]
+            psd = psd[::step][: len(signals)]
+            m1 = m1[:len(X)]
+            m2 = m2[:len(X)]
+        kernel_size = X.size(-1)
+        signal_idx = signals.shape[-1] - int(
+            self.waveform_sampler.right_pad * self.hparams.sample_rate
+        )
+        max_start = int(signal_idx - self.left_pad_size)
+        max_stop = max_start + kernel_size
+        pad = max_stop - signals.size(-1)
+        if pad > 0:
+            signals = torch.nn.functional.pad(signals, [0, pad])
+        if self.hparams.num_valid_views == 1:
+            step = 0
+        else:
+            step = kernel_size - self.left_pad_size - self.right_pad_size
+            step /= self.hparams.num_valid_views - 1
+        X_inj = []
+        for i in range(self.hparams.num_valid_views):
+            start = max_start - int(i * step)
+            stop = start + kernel_size
+            injected = X + signals[:, :, int(start) : int(stop)]
+            X_inj.append(injected)
+        X_inj = torch.stack(X_inj)
+        return X, X_inj, psd, m1, m2

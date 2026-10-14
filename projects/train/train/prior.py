@@ -2,11 +2,71 @@ from typing import Callable, Optional
 
 import torch
 
+from bilby.core.prior import Triangular
+from torch.distributions import Distribution
+from scipy.stats import gaussian_kde
+import numpy as np
+import h5py
+
+def logit(data, bounds, inv_transform=False):
+    if not inv_transform:
+        transform = np.log((data-bounds[0])/(bounds[1]-data))
+    elif inv_transform:
+        transform = (bounds[1]*np.exp(data)+bounds[0])/(1+np.exp(data))
+    return transform
+
+class KDEDistribution(Distribution):
+    def __init__(
+        self,
+        file,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        with h5py.File(file, 'r') as f:
+            m1 = f['parameters']['mass_1'][:]
+            m2 = f['parameters']['mass_2'][:]
+            z = f['parameters']['redshift'][:]
+        m1 = m1/(1+z)
+        m2 = m2/(1+z)
+        cm = ((m1*m2)**(3/5))/((m1+m2)**(1/5))
+        mr = m2/m1
+        self.cm_limits = [min(np.log(cm))-0.0001, max(np.log(cm))+0.0001]
+        self.mr_limits = [min(np.log(mr))-0.0001, max(np.log(mr))+0.0001]
+        log_cm_t = logit(np.log(cm), [min(np.log(cm))-0.0001, max(np.log(cm))+0.0001])
+        log_mr_t = logit(np.log(mr), [min(np.log(mr))-0.0001, max(np.log(mr))+0.0001])
+        self.kernel = gaussian_kde([log_cm_t, log_mr_t], 
+                                   bw_method = 0.1)
+    def sample(self, X):
+        samples = self.kernel.resample(X[0])
+        cm = logit(samples[0], 
+                   self.cm_limits, 
+                   inv_transform=True)
+        mr = logit(samples[1], 
+                   self.mr_limits, 
+                   inv_transform=True)
+        cm = torch.exp(torch.Tensor(cm))
+        mr = torch.exp(torch.Tensor(mr))
+        mr = torch.clamp(mr, max = 0.999)
+        return cm, mr
+
+class TorchTriangular(Triangular):
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+    
+    def sample(self, *args, **kwargs):
+        data = super().sample(*args, **kwargs)
+        data = torch.Tensor(data)
+        return data
 
 class AframePrior:
     def __init__(
         self,
-        priors: dict[str, torch.distributions.Distribution],
+        priors: dict[str, torch.distributions.Distribution | TorchTriangular],
         conversion_function: Optional[Callable] = None,
         constraint_function: Optional[Callable] = None,
     ):
@@ -47,6 +107,9 @@ class AframePrior:
         parameters = {
             k: v.sample((N,)).to(device) for k, v in self.priors.items()
         }
+        if 'log_mass_ratio' in parameters.keys():
+            parameters['mass_ratio'] = 10**parameters['log_mass_ratio']
+            _ = parameters.pop('log_mass_ratio')
         # perform any necessary conversions
         # to from sampled parameters to
         # waveform generation parameters
@@ -88,6 +151,54 @@ class AframePrior:
             log_probs += self.priors[param].log_prob(tensor).to(first.device)
         return log_probs
 
+class KDEPrior(AframePrior):
+    def __init__(
+        self,
+        *args,
+        **kwargs
+    ):
+        """
+        A class for sampling parameters from a prior distribution
+
+        Args:
+            priors:
+                A dictionary of parameter samplers that take an integer N
+                and return a tensor of shape (N, ...) representing
+                samples from the prior distribution
+            conversion_function:
+                A callable that takes a dictionary of sampled parameters
+                and returns a dictionary of waveform generation parameters
+            constraint_function:
+                A callable that takes a dictionary of sampled parameters,
+                discards any that don't satisfy the constraint, and returns
+                the remaining parameters
+        """
+        super().__init__(*args, **kwargs)
+    
+    def __call__(
+        self,
+        N: int,
+        device: str = "cpu",
+    ) -> dict[str, torch.Tensor]:
+        """
+        Generates random samples from the prior
+
+        Args:
+            N: Number of samples to generate
+            device: Device to place the samples
+        """
+        # sample parameters from prior
+        parameters = {}
+        for k, v in self.priors.items():
+            if k == 'cm_mr':
+                samples = v.sample((N,))
+                parameters['chirp_mass'] = samples[0].to(device)
+                parameters['mass_ratio'] = samples[1].to(device)
+            else:
+               parameters[k] = v.sample((N,)).to(device)
+        
+        parameters = self.conversion_function(parameters)
+        return {k: v[:N] for k, v in parameters.items()}
 
 class ParameterTransformer(torch.nn.Module):
     """

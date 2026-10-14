@@ -208,6 +208,7 @@ class InferBase(
         from infer.postprocess import Postprocessor
 
         ip = os.getenv("AFRAME_TRITON_IP")
+        port = os.getenv("AFRAME_TRITON_PORT", "8001")
         self.tmp_dir.mkdir(exist_ok=True, parents=True)
         fname, shifts = self.branch_data
         sequence = Sequence(
@@ -231,7 +232,7 @@ class InferBase(
         )
 
         client = InferenceClient(
-            address=f"{ip}:8001",
+            address=f"{ip}:{port}",
             model_name=self.model_name,
             model_version=self.model_version,
             callback=sequence,

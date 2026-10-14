@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.10, <3.13"
 resolution-markers = [
     "python_full_version >= '3.12'",
@@ -1185,7 +1185,7 @@ requires-dist = [
     { name = "aframe", editable = "../../" },
     { name = "jsonargparse", specifier = "~=4.24" },
     { name = "ledger", editable = "../../libs/ledger" },
-    { name = "ml4gw-hermes", extras = ["torch"], specifier = ">=0.2.1" },
+    { name = "ml4gw-hermes", extras = ["torch"], specifier = "==0.2.1" },
     { name = "ratelimiter", specifier = "~=1.2" },
     { name = "tqdm", specifier = "~=4.66" },
     { name = "urllib3", specifier = ">=1.25.4,<1.27" },
@@ -1897,7 +1897,7 @@ wheels = [
 
 [[package]]
 name = "ml4gw"
-version = "0.7.11"
+version = "0.8.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jaxtyping" },
@@ -1906,9 +1906,9 @@ dependencies = [
     { name = "torch" },
     { name = "torchaudio" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6f/0a/722f553635ffc91b32623e69a4c93591c11ce2c24a10e4bda35ab0d8e6ae/ml4gw-0.7.11.tar.gz", hash = "sha256:8df9ebecd97ed6a6e8ba07fab40882f5966e646897f5187a9ccf7913faf6464e", size = 119593, upload-time = "2026-01-29T20:34:30.794Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0f/51/8a4f2c8061fb1dfa9a8bc6cbb3d0f79ddfa10121eb8e1f6ee910ba29ed7e/ml4gw-0.8.4.tar.gz", hash = "sha256:3a801759d38a4aaab64030a810505a72ba73acfb0a5f286b2bda534cc23e47a8", size = 131414, upload-time = "2026-09-25T13:53:41.624Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/89/7d/f8c3e695d52cd9e70fd3f7bb51efd29848a3eb481dc1b94228f481dd05f8/ml4gw-0.7.11-py3-none-any.whl", hash = "sha256:0a6645f27444d266fb94afe988450bc2d00e24bd70328b0a5903194e1900acdb", size = 129588, upload-time = "2026-01-29T20:34:29.357Z" },
+    { url = "https://files.pythonhosted.org/packages/ce/ce/f65f38f5db0a37160c1e171a0471b61727709e4008f69879991d41026239/ml4gw-0.8.4-py3-none-any.whl", hash = "sha256:bac66cbed02b2082ad1c2d845a47bedf67cfb8cce0928d2157658e8788eb7bb3", size = 143589, upload-time = "2026-09-25T13:53:40.554Z" },
 ]
 
 [[package]]
@@ -3510,7 +3510,7 @@ dependencies = [
 requires-dist = [
     { name = "astropy", specifier = ">=6.0.1" },
     { name = "h5py", specifier = "~=3.6" },
-    { name = "ml4gw", specifier = ">=0.7.10" },
+    { name = "ml4gw", specifier = ">=0.8.0" },
     { name = "numpy", specifier = ">=1.26.4,<2" },
     { name = "s3fs", specifier = ">=2024,<2025" },
 ]
