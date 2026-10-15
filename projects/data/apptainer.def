@@ -14,10 +14,10 @@ Stage: build
 mkdir -p /cvmfs /hdfs /gpfs /ceph /hadoop
 
 # install git for pip installation
-apt-get update
-apt-get install -y --no-install-recommends git
-apt-get install -y build-essential
-apt-get clean
+apt-get -o APT::Sandbox::User=root update
+apt-get -o APT::Sandbox::User=root install -y --no-install-recommends git
+apt-get -o APT::Sandbox::User=root install -y build-essential
+apt-get -o APT::Sandbox::User=root clean
 
 # activate micromamba and create environment from lockfile
 /bin/bash /root/.bashrc

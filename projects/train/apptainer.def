@@ -15,9 +15,9 @@ From: ghcr.io/astral-sh/uv:0.6.10-python3.10-bookworm-slim
 /home/seiya.tsukamoto/ml4gw /opt/ml4gw
 
 %post
-apt-get update
-apt-get install -y build-essential
-apt-get clean
+apt-get -o APT::Sandbox::User=root update
+apt-get -o APT::Sandbox::User=root install -y build-essential
+apt-get -o APT::Sandbox::User=root clean
 
 cd /opt/aframe/projects/train
 # Set venv dir outside of project for 
