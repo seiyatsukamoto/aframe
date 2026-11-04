@@ -1,7 +1,69 @@
+from typing import Dict, List
+import numpy as np
+
+def logit(data, bounds, inv_transform=False):
+    if not inv_transform:
+        transform = np.log((data-bounds[0])/(bounds[1]-data))
+    elif inv_transform:
+        transform = (bounds[1]*np.exp(data)+bounds[0])/(1+np.exp(data))
+    return transform
+
 def chirp_mass(m1, m2):
     """Calculate chirp mass from component masses"""
     return ((m1 * m2) ** 3 / (m1 + m2)) ** (1 / 5)
 
+def cm_mr_to_m1_m2(cm, mr):
+    """Calculate component masses from chirp mass and mass ratio"""
+    return cm*((1+mr)**(1/5))*(mr**(-3/5)), cm*((1+mr)**(1/5))*(mr**(2/5))
+
+def mr_limit_from_cm(cm, min_m2):
+    """Calculate minimum mass ratio given chirp mass and minimum m2"""
+    y = min_m2/cm
+    t = y**5
+    if y < 0.68:
+        return -1/3+(2/3)*np.cos((1/3)*np.arccos((27/2)*t-1))
+    else:
+        a = t/2-1/27
+        b = ((t**2)/4-t/27)**(1/2)
+        return (a+b)**(1/3)+(a-b)**(1/3)-1/3
+
+def mass_ratio_condition_powerlaw(reference_params, cm):
+    """
+    Return a dictionary that can be interpreted by Bilby's
+    `ConditionalUniform` to set the minimum value of `mr`
+    from `cm`
+    """
+    return {
+        "alpha": reference_params["alpha"],
+        "minimum": mr_limit_from_cm(cm, 5),
+        "maximum": reference_params["maximum"],
+    }
+
+logit_bounds = [0, 1]
+
+def mass_ratio_condition_truncatedgaussian(reference_params, cm):
+    """
+    Return a dictionary that can be interpreted by Bilby's
+    `ConditionalUniform` to set the minimum value of `mr`
+    from `cm`
+    """
+    return {
+        "mu": reference_params["mu"],
+        "sigma": reference_params["sigma"],
+        "minimum": logit(mr_limit_from_cm(cm, 5).real, [0, 1]),
+        "maximum": reference_params["maximum"],
+    }
+
+def mass_ratio_condition_gamma(reference_params, cm):
+    """
+    Return a dictionary that can be interpreted by Bilby's
+    `ConditionalUniform` to set the minimum value of `mr`
+    from `cm`
+    """
+    return {
+        "k": reference_params["mu"],
+        "theta": reference_params["sigma"],
+    }
 
 def mass_condition_uniform(reference_params, mass_1):
     """
@@ -40,7 +102,7 @@ def mass_constraints(samples):
     return samples
 
 
-def transpose(d: dict[str, list]):
+def transpose(d: Dict[str, List]):
     """Turn a dict of lists into a list of dicts"""
     return [
         dict(zip(d, col, strict=True)) for col in zip(*d.values(), strict=True)

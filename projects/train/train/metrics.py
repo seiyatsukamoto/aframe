@@ -1,11 +1,12 @@
 import itertools
 from collections import defaultdict
+from typing import Optional
 
 import torch
 from torchmetrics import Metric
 from torchmetrics.classification import BinaryAUROC
-from utils import x_per_y
 
+from utils import x_per_y
 
 class TimeSlideAUROC(Metric):
     """
@@ -83,6 +84,33 @@ class TimeSlideAUROC(Metric):
         y = y[idx]
         return self.metric(y_pred, y)
 
+class SPLMetric(Metric):
+    def __init__(
+        self, *args, **kwargs
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.add_state("foreground", default=[])
+        self.add_state("chirp_mass", default=[])
+        self.add_state("mass_ratio", default=[])
+
+    def update(
+        self, foreground: torch.Tensor, chirp_mass: torch.Tensor, mass_ratio: torch.Tensor
+    ) -> None:
+        self.foreground.append(foreground)
+        self.chirp_mass.append(chirp_mass)
+        self.mass_ratio.append(mass_ratio)
+    
+    def compute(self):
+        foreground, background, chirp_mass = [], defaultdict(list), []
+        for fg, cm, mr in zip(self.foreground, self.chirp_mass, self.mass_ratio, strict=True):
+            foreground.append(fg)
+            chirp_mass.append(cm)
+            mass_ratio.append(mr)
+        foreground = torch.cat(foreground)
+        chirp_mass = torch.cat(chirp_mass)
+        mass_ratio = torch.cat(mass_ratio)
+        return chirp_mass[foreground < thresh], mass_ratio[foreground < thresh]
+
 
 class TimeSlide(torch.utils.data.IterableDataset):
     """
@@ -153,7 +181,7 @@ class TimeSlide(torch.utils.data.IterableDataset):
         return size // self.stride_size + 1
 
     def new_bounds(
-        self, start: int | None = None, stop: int | None = None
+        self, start: Optional[int] = None, stop: Optional[int] = None
     ) -> "TimeSlide":
         """
         Basically return a new timeslide that points to the

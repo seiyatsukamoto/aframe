@@ -5,7 +5,16 @@ import torch
 from ml4gw.transforms import Heterodyne
 from utils.augmentation import select_top_k
 
+from train.data.base import ZippedDataset
 from train.data.supervised.supervised import SupervisedAframeDataset
+from train.data.waveforms import (
+    ChunkedWaveformDataset,
+    Hdf5WaveformLoader,
+    WaveformLoader,
+    WaveformSampler,
+)
+from train.metrics import get_timeslides
+
 
 
 class TimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
@@ -26,6 +35,96 @@ class TimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
         X = self.whitener(X, psds)
         return X, y
 
+
+class SPLSupervisedAframeDataset(TimeDomainSupervisedAframeDataset):
+    def setup(self, stage: str) -> None:
+        world_size, rank = self.get_world_size_and_rank()
+        self._logger = self.get_logger(world_size, rank)
+        self.train_fnames, self.valid_fnames = self.train_val_split()
+        with h5py.File(self.train_fnames[0], "r") as f:
+            sample_rate = 1 / f[self.hparams.ifos[0]].attrs["dx"]
+            if not sample_rate == self.hparams.sample_rate:
+                raise ValueError(
+                    f"Specified sample rate is {self.hparams.sample_rate} "
+                    f"but background data is sampled at {sample_rate}"
+                )
+        self._logger.info(f"Validated sample rate {sample_rate}")
+        val_background = self.load_val_background(self.valid_fnames)
+        self._logger.info(
+            "Constructing validation timeslides from background segments "
+            f"{' '.join(self.valid_fnames)}"
+        )
+        self.timeslides, self.valid_loader_length = get_timeslides(
+            val_background,
+            self.hparams.valid_livetime,
+            self.hparams.sample_rate,
+            self.sample_length,
+            self.hparams.valid_stride,
+            self.val_batch_size,
+        )
+        self.val_waveforms, self.spl_waveforms, self.cm, self.mr = self.waveform_sampler.get_val_waveforms(world_size, rank)
+        if self.waveforms_from_disk:
+            self.waveform_sampler.get_train_waveforms(
+                world_size, rank, self.device
+            )
+        self._logger.info("Initial dataloading complete")
+        self._logger.info("Constructing sample rate dependent transforms")
+        self.build_transforms()
+        self.transforms_to_device()
+    
+    def val_dataloader(self) -> ZippedDataset:
+        background_dataset = pl.utilities.combined_loader.CombinedLoader(
+            self.timeslides, mode="sequential"
+        )
+        iter(background_dataset)  # gives it a __len__ property
+        num_waveforms = len(self.val_waveforms)
+        signal_batch_size = (num_waveforms - 1) // self.valid_loader_length + 1
+        signal_dataset = torch.utils.data.TensorDataset(self.val_waveforms)
+        signal_loader = torch.utils.data.DataLoader(
+            signal_dataset,
+            batch_size=signal_batch_size,
+            shuffle=False,
+            pin_memory=False,
+        )
+        val_dataset = ZippedDataset(
+            background_dataset,
+            signal_loader,
+            minimum=min(self.valid_loader_length, len(signal_loader)),
+        )
+
+        spl_parameters = pl.utilities.combined_loader.CombinedLoader(
+            (self.cm, self.mr), mode="sequential"
+        )
+        num_waveforms = len(self.spl_waveforms)
+        signal_batch_size = (num_waveforms - 1) // self.valid_loader_length + 1
+        signal_dataset = torch.utils.data.TensorDataset(self.spl_waveforms)
+        signal_loader = torch.utils.data.DataLoader(
+            signal_dataset,
+            batch_size=2*signal_batch_size,
+            shuffle=False,
+            pin_memory=False,
+        )
+        spl_dataset = ZippedDataset(
+            spl_parameters,
+            signal_loader,
+            minimum=min(self.valid_loader_length, len(signal_loader)),
+        )
+        return val_dataset, spl_dataset
+    def on_after_batch_transfer(self, batch, _):
+        if self.trainer.training:
+            if self.waveforms_from_disk:
+                [batch], waveforms = batch
+                batch = self.inject(batch, waveforms)
+            else:
+                [batch] = batch
+                batch = self.inject(batch)
+        elif self.trainer.validating or self.trainer.sanity_checking:
+            if len(batch[0]) == 3:
+                [background, _, timeslide_idx], [signals] = batch
+                shift = self.timeslides[timeslide_idx].shift_size
+                X_bg, X_fg = self.build_val_batches(background, signals)
+                batch = (shift, X_bg, X_fg)
+        return batch
 
 class HeterodyneTimeDomainSupervisedAframeDataset(SupervisedAframeDataset):
     """

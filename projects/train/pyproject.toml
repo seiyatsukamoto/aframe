@@ -31,6 +31,7 @@ dependencies = [
     "numpy>=2",
     "kr8s>=0.20.0",
     "anyio",
+    "jupyterlab"
 ]
 
 [project.scripts]

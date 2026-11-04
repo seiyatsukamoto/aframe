@@ -58,3 +58,37 @@ class CBCGenerator(WaveformGenerator):
         waveforms = torch.stack([hc, hp], dim=1)
         hc, hp = waveforms.transpose(1, 0)
         return hc.float(), hp.float()
+
+
+class SPLGenerator(CBCGenerator):
+    def __init__(
+        self,
+        spl_waveform_file,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.spl_waveform_file = spl_waveform_file
+        waveform_set = self.waveform_set_cls.read(spl_waveform_file)
+        self.num_spl_waveforms = len(waveform_set)
+    
+    def get_val_waveforms(self, world_size, rank):
+        """
+        Returns validation waveforms for this device
+        """
+        start, stop = self.get_slice_bounds(
+            self.num_val_waveforms, world_size, rank
+        )
+        waveform_set = self.waveform_set_cls.read(self.val_waveform_file)
+        val_waveforms = torch.Tensor(waveform_set.waveforms[start:stop])
+        
+        start, stop = self.get_slice_bounds(
+            self.num_spl_waveforms, world_size, rank
+        )
+        waveform_set = self.waveform_set_cls.read(self.spl_waveform_file)
+        spl_waveforms = torch.Tensor(waveform_set.waveforms[start:stop])
+        mass_1 = torch.Tensor(waveform_set.parameters.mass_1[start:stop])
+        mass_2 = torch.Tensor(waveform_set.parameters.mass_2[start:stop])
+        mr = mass_2/mass_1
+        cm = ((mass_1*mass_2)**(3/5))/((mass_1+mass_2)*(1/5))
+        return val_waveforms, spl_waveforms, cm, mr

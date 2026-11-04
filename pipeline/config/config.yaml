@@ -56,9 +56,9 @@ sample_rate: 2048.0         # Hz
 prior: &prior priors.priors.end_o3_ratesandpops  # module path to a prior
 minimum_frequency: 20.0                          # Hz
 reference_frequency: 50.0                        # Hz
-waveform_duration: 8.0                           # seconds
+waveform_duration: 16.0                           # seconds
 waveform_approximant: IMRPhenomPv2
-right_pad: 2.0                                   # seconds
+right_pad: 1.0                                   # seconds
 seed: 1122
 
 # --- Training waveforms ------------------------------------------------------

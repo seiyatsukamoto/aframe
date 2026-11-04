@@ -22,6 +22,39 @@ class SupervisedAframe(AframeBase):
     def score(self, X):
         return self(X)
 
+from train.metrics import SPLMetric
+class SPLSupervisedAframe(SupervisedAframe):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.prior_metric = SPLMetric()
+    
+    def on_validation_epoch_end(self):
+        self.validating = False
+        auroc = self.metric.compute()
+        chirp_mass_dist, mass_ratio_dist = self.prior_metric.compute()
+        self.trainer.datamodule.waveform_sampler.training_prior.change_dist(chirp_mass_dist, mass_ratio_dist)
+        self.log("valid_auroc", auroc, sync_dist=False)
+        self.metric.reset()
+        self.prior_metric.reset()
+        self.validating = False
+    
+    def validation_step(self, batch, _) -> None:
+        if dataloader_idx == 0:
+            shift, X_bg, X_inj = batch
+            y_bg = self.score(X_bg)
+            num_views, batch, *shape = X_inj.shape
+            X_inj = X_inj.view(num_views * batch, *shape)
+            y_fg = self.score(X_inj)
+            y_fg = y_fg.view(num_views, batch)
+            y_fg = y_fg.mean(0)
+        else:
+            [chirp_mass, mass_ratio], X_inj = batch
+            y_fg = self.score(X_inj)
+        if dataloader_idx == 0:
+            self.metric.update(shift, y_bg, y_fg)
+        else:
+            self.prior_metric.update(y_fg, chirp_mass, mass_ratio)
+            
 
 class SupervisedMultiModalAframe(SupervisedAframe):
     def __init__(self, arch: SupervisedArchitecture, *args, **kwargs) -> None:
